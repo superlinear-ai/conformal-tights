@@ -1,0 +1,144 @@
+[build-system]  # https://python-poetry.org/docs/pyproject/#poetry-and-pep-517
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]  # https://python-poetry.org/docs/pyproject/
+name = "conformal-tights"
+version = "0.0.0"
+description = "A scikit-learn meta-estimator for computing tight conformal predictions"
+authors = ["Laurent Sorber <laurent@radix.ai>"]
+readme = "README.md"
+repository = "https://github.com/radix-ai/conformal-tights"
+
+[tool.commitizen]  # https://commitizen-tools.github.io/commitizen/config/
+bump_message = "bump(release): v$current_version → v$new_version"
+tag_format = "v$version"
+update_changelog_on_bump = true
+version_provider = "poetry"
+
+[tool.poetry.dependencies]  # https://python-poetry.org/docs/dependency-specification/
+python = ">=3.10,<4.0"
+lightgbm = ">=4.0.0"
+scikit-learn = ">=1.1.0"
+
+[tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
+commitizen = ">=3.2.1"
+coverage = { extras = ["toml"], version = ">=7.2.5" }
+mypy = ">=1.2.0"
+poethepoet = ">=0.20.0"
+pre-commit = ">=3.3.1"
+pytest = ">=7.3.1"
+pytest-clarity = ">=1.0.1"
+pytest-mock = ">=3.10.0"
+pytest-xdist = ">=3.2.1"
+ruff = ">=0.2.1"
+safety = ">=2.3.4,!=2.3.5"
+shellcheck-py = ">=0.9.0"
+typeguard = ">=3.0.2"
+
+[tool.poetry.group.dev.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
+cruft = ">=2.14.0"
+ipykernel = ">=6.29.2"
+pdoc = ">=13.1.1"
+
+[tool.coverage.report]  # https://coverage.readthedocs.io/en/latest/config.html#report
+fail_under = 50
+precision = 1
+show_missing = true
+skip_covered = true
+
+[tool.coverage.run]  # https://coverage.readthedocs.io/en/latest/config.html#run
+branch = true
+command_line = "--module pytest"
+data_file = "reports/.coverage"
+source = ["src"]
+
+[tool.coverage.xml]  # https://coverage.readthedocs.io/en/latest/config.html#xml
+output = "reports/coverage.xml"
+
+[tool.mypy]  # https://mypy.readthedocs.io/en/latest/config_file.html
+junit_xml = "reports/mypy.xml"
+strict = true
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
+ignore_missing_imports = true
+pretty = true
+show_column_numbers = true
+show_error_codes = true
+show_error_context = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]  # https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
+addopts = "--color=yes --doctest-modules --exitfirst --failed-first --strict-config --strict-markers --typeguard-packages=conformal_tights --verbosity=2 --junitxml=reports/pytest.xml"
+filterwarnings = ["error", "ignore::DeprecationWarning"]
+testpaths = ["src", "tests"]
+xfail_strict = true
+
+[tool.ruff]  # https://github.com/charliermarsh/ruff
+fix = true
+line-length = 100
+src = ["src", "tests"]
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore-init-module-imports = true
+select = ["A", "ASYNC", "B", "BLE", "C4", "C90", "D", "DTZ", "E", "EM", "ERA", "F", "FBT", "FLY", "FURB", "G", "I", "ICN", "INP", "INT", "ISC", "LOG", "N", "NPY", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TCH", "TID", "TRY", "UP", "W", "YTT"]
+ignore = ["D203", "D213", "E501", "RET504", "S101", "S307"]
+unfixable = ["ERA001", "F401", "F841", "T201", "T203"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.poe.tasks]  # https://github.com/nat-n/poethepoet
+
+  [tool.poe.tasks.docs]
+  help = "Generate this package's docs"
+  cmd = """
+    pdoc
+      --docformat $docformat
+      --output-directory $outputdirectory
+      conformal_tights
+    """
+
+    [[tool.poe.tasks.docs.args]]
+    help = "The docstring style (default: numpy)"
+    name = "docformat"
+    options = ["--docformat"]
+    default = "numpy"
+
+    [[tool.poe.tasks.docs.args]]
+    help = "The output directory (default: docs)"
+    name = "outputdirectory"
+    options = ["--output-directory"]
+    default = "docs"
+
+  [tool.poe.tasks.lint]
+  help = "Lint this package"
+
+    [[tool.poe.tasks.lint.sequence]]
+    cmd = """
+      pre-commit run
+        --all-files
+        --color always
+      """
+
+    [[tool.poe.tasks.lint.sequence]]
+    shell = "safety check --continue-on-error --full-report"
+
+  [tool.poe.tasks.test]
+  help = "Test this package"
+
+    [[tool.poe.tasks.test.sequence]]
+    cmd = "coverage run"
+
+    [[tool.poe.tasks.test.sequence]]
+    cmd = "coverage report"
+
+    [[tool.poe.tasks.test.sequence]]
+    cmd = "coverage xml"
