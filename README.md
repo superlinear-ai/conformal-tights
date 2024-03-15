@@ -5,7 +5,7 @@
 A [scikit-learn meta-estimator](https://scikit-learn.org/stable/glossary.html#term-meta-estimator) that adds [conformal prediction](https://en.wikipedia.org/wiki/Conformal_prediction) of coherent [quantiles](https://en.wikipedia.org/wiki/Quantile) and [intervals](https://en.wikipedia.org/wiki/Prediction_interval) to any [scikit-learn regressor](https://scikit-learn.org/stable/glossary.html#term-regressor). Features:
 
 1. 🍬 *Meta-estimator*: add prediction of quantiles and intervals to any scikit-learn regressor
-2. 🌡️ *Conformally calibrated:* accurate quantiles and intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability)
+2. 🌡️ *Conformally calibrated:* accurate quantiles, and intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability)
 3. 🚦 *Coherent quantiles:* quantiles increase monotonically instead of [crossing](https://github.com/dmlc/xgboost/issues/9848) [each other](https://github.com/microsoft/LightGBM/issues/3447)
 4. 👖 *Tight quantiles:* selects the lowest [dispersion](https://en.wikipedia.org/wiki/Statistical_dispersion) that provides the desired coverage
 5. 🎁 *Data efficient:* requires only a small number of calibration examples to fit

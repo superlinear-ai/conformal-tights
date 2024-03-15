@@ -36,10 +36,10 @@ jobs:
           PYTHON_VERSION=${{ matrix.python-version }} devcontainer up --workspace-folder .
 
       - name: Lint package
-        run: devcontainer exec --workspace-folder . poe lint
+        run: devcontainer exec --remote-env CI=true --workspace-folder . poe lint
 
       - name: Test package
-        run: devcontainer exec --workspace-folder . poe test
+        run: devcontainer exec --remote-env CI=true --workspace-folder . poe test
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3
