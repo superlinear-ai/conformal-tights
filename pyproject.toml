@@ -18,13 +18,15 @@ version_provider = "poetry"
 
 [tool.poetry.dependencies]  # https://python-poetry.org/docs/dependency-specification/
 python = ">=3.10,<4.0"
-lightgbm = ">=4.0.0"
-scikit-learn = ">=1.1.0"
+scikit-learn = ">=1.0.0"
+xgboost = ">=2.0.0"
 
 [tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
 commitizen = ">=3.2.1"
 coverage = { extras = ["toml"], version = ">=7.2.5" }
+lightgbm = ">=4.3.0"
 mypy = ">=1.2.0"
+pandas = ">=2.2.1"
 poethepoet = ">=0.20.0"
 pre-commit = ">=3.3.1"
 pytest = ">=7.3.1"
@@ -34,12 +36,13 @@ pytest-xdist = ">=3.2.1"
 ruff = ">=0.2.1"
 safety = ">=2.3.4,!=2.3.5"
 shellcheck-py = ">=0.9.0"
-typeguard = ">=3.0.2"
 
 [tool.poetry.group.dev.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
 cruft = ">=2.14.0"
 ipykernel = ">=6.29.2"
+matplotlib = ">=3.8.3"
 pdoc = ">=13.1.1"
+tabulate = ">=0.9.0"
 
 [tool.coverage.report]  # https://coverage.readthedocs.io/en/latest/config.html#report
 fail_under = 50
@@ -69,7 +72,7 @@ show_error_context = true
 warn_unreachable = true
 
 [tool.pytest.ini_options]  # https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
-addopts = "--color=yes --doctest-modules --exitfirst --failed-first --strict-config --strict-markers --typeguard-packages=conformal_tights --verbosity=2 --junitxml=reports/pytest.xml"
+addopts = "--color=yes --doctest-modules --exitfirst --failed-first --strict-config --strict-markers --verbosity=2 --junitxml=reports/pytest.xml"
 filterwarnings = ["error", "ignore::DeprecationWarning"]
 testpaths = ["src", "tests"]
 xfail_strict = true
@@ -83,7 +86,7 @@ target-version = "py310"
 [tool.ruff.lint]
 ignore-init-module-imports = true
 select = ["A", "ASYNC", "B", "BLE", "C4", "C90", "D", "DTZ", "E", "EM", "ERA", "F", "FBT", "FLY", "FURB", "G", "I", "ICN", "INP", "INT", "ISC", "LOG", "N", "NPY", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TCH", "TID", "TRY", "UP", "W", "YTT"]
-ignore = ["D203", "D213", "E501", "RET504", "S101", "S307"]
+ignore = ["D203", "D213", "E501", "N803", "N806", "RET504", "RUF002", "RUF003", "S101", "S307"]
 unfixable = ["ERA001", "F401", "F841", "T201", "T203"]
 
 [tool.ruff.lint.flake8-tidy-imports]
