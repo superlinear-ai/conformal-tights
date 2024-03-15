@@ -59,7 +59,7 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="" width="512">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/b02b3797-de6a-4e0d-b457-ed8e50e3f42c" width="512">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
