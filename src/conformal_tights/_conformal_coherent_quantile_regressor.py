@@ -26,15 +26,38 @@ F = TypeVar("F", np.float32, np.float64)
 class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, BaseEstimator):
     """Conformal Coherent Quantile Regressor meta-estimator.
 
-    TODO: Explain approach
+    Adds conformally calibrated quantile and interval prediction to a given regressor by fitting a
+    meta-estimator as follows:
+
+        1. The given data is split into a training set and a conformal calibration set.
+        2. The training set is used to fit the given regressor.
+        3. The training set is also used to fit a nonconformity estimator, which is by default an
+           XGBoost vector quantile regressor for the quantiles (1/8, 1/4, 1/2, 3/4, 7/8). These
+           quantiles are not necessarily monotonic and may cross each other.
+        4. The conformal calibration set is split into two levels.
+        5. The level 1 conformal calibration set is used to fit a Coherent Linear Quantile
+           Regression model of the (relative) residuals given the level 1 nonconformity estimates.
+           This model produces conformally calibrated quantiles of the (relative) residuals that are
+           coherent in the sense that they increase monotonically.
+        6. The level 2 conformal calibration set is used to fit a per-quantile conformal bias on top
+           of the level 1 conformal quantile predictions of the (relative) residuals.
+
+    Quantile and interval predictions are made by predicting the nonconformity estimates, converting
+    those into conformally calibrated and coherent quantiles, and then adding a conformally
+    calibrated bias to the result. At the user's request, the bias can prioritize quantile accuracy
+    or interval coverage.
+
+    The level 1 and level 2 conformal predictors are lazily fitted on both the absolute and relative
+    residuals for the requested quantiles at prediction time. This allows the user to choose which
+    quantiles to predict, and to select the quantile predictions with the lowest dispersion.
     """
 
     def __init__(  # noqa: PLR0913
         self,
         estimator: BaseEstimator | Literal["auto"] = "auto",
         *,
-        nonconformity_estimator: XGBRegressor | Literal["auto"] = "auto",
-        nonconformity_quantiles: npt.ArrayLike | Literal["auto"] = "auto",
+        nonconformity_estimator: BaseEstimator | Literal["auto"] = "auto",
+        nonconformity_quantiles: npt.ArrayLike = (1 / 8, 1 / 4, 1 / 2, 3 / 4, 7 / 8),
         conformal_calibration_size: tuple[float, int] = (0.3, 1440),
         random_state: int | np.random.RandomState | None = 42,
     ) -> None:
@@ -49,7 +72,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             for the given `nonconformity_quantiles`.
         nonconformity_quantiles
             The quantiles that the nonconformity estimator should predict when
-            `nonconformity_estimator` is "auto". If "auto", uses (1/8, 1/4, 1/2, 3/4, 7/8).
+            `nonconformity_estimator` is "auto".
         conformal_calibration_size
             A tuple of the relative and absolute size of the conformal calibration set. The smallest
             of the two is used.
@@ -78,7 +101,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         y = np.ravel(np.asarray(y))
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = y.dtype  # Used to cast predictions to the correct dtype.
-        if np.all(y.astype(int) == y):
+        if np.all(y.astype(np.intp) == y):
             self.y_dtype_ = np.intp  # To satisfy sklearn's `check_regressors_int`.
         y = y.astype(np.float64)  # To support datetime64[ns] and timedelta64[ns].
         if sample_weight is not None:
@@ -123,11 +146,6 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         # regression. We fit a minimal number of quantiles to reduce the computational cost, but
         # also to reduce the risk of overfitting in the coherent quantile regressor that is applied
         # on top of the nonconformity estimates.
-        self.nonconformity_quantiles_ = (
-            (1 / 8, 1 / 4, 1 / 2, 3 / 4, 7 / 8)
-            if self.nonconformity_quantiles == "auto"
-            else self.nonconformity_quantiles
-        )
         self.nonconformity_estimator_ = (
             clone(self.nonconformity_estimator)
             if self.nonconformity_estimator != "auto"
@@ -136,7 +154,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         if isinstance(self.nonconformity_estimator_, XGBRegressor):
             self.nonconformity_estimator_.set_params(
                 objective="reg:quantileerror",
-                quantile_alpha=self.nonconformity_quantiles_,
+                quantile_alpha=self.nonconformity_quantiles,
                 enable_categorical=True,
                 random_state=self.random_state,
             )
@@ -231,7 +249,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         cqr_abs, bias_abs = self._lazily_fit_conformal_predictor("Δŷ", quantiles)
         cqr_rel, bias_rel = self._lazily_fit_conformal_predictor("Δŷ/ŷ", quantiles)
         if priority == "coverage":  # Only allow quantile expansion when the priority is coverage.
-            center = np.median(quantiles)
+            center = 0.5
             bias_abs[center <= quantiles] = np.maximum(bias_abs[center <= quantiles], 0)
             bias_abs[quantiles <= center] = np.minimum(bias_abs[quantiles <= center], 0)
             bias_rel[center <= quantiles] = np.maximum(bias_rel[center <= quantiles], 0)
@@ -253,10 +271,12 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         if hasattr(X, "dtypes") and hasattr(X, "index"):
             try:
                 import pandas as pd
-
-                ŷ_quantiles = pd.DataFrame(ŷ_quantiles, index=X.index, columns=quantiles)
             except ImportError:
                 pass
+            else:
+                ŷ_quantiles_df = pd.DataFrame(ŷ_quantiles, index=X.index, columns=quantiles)
+                ŷ_quantiles_df.columns.name = "quantiles"
+                return ŷ_quantiles_df
         return ŷ_quantiles
 
     @overload
@@ -327,10 +347,11 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         if hasattr(X, "dtypes") and hasattr(X, "index"):
             try:
                 import pandas as pd
-
-                ŷ = pd.Series(ŷ, index=X.index)
             except ImportError:
                 pass
+            else:
+                ŷ_series = pd.Series(ŷ, index=X.index)
+                return ŷ_series
         return ŷ
 
     def _more_tags(self) -> dict[str, bool]:

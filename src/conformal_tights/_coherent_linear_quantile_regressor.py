@@ -37,7 +37,7 @@ def coherent_linear_quantile_regression(
             (1 - qⱼ)(ŷ⁽ʲ⁾ᵢ - yᵢ) : ŷ⁽ʲ⁾ᵢ > yᵢ
         }
 
-    with a linear model ŷ⁽ʲ⁾ := Xβ⁽ʲ⁾ for each quantile rank qⱼ of a given array of quantile ranks.
+    for the linear model ŷ⁽ʲ⁾ := Xβ⁽ʲ⁾, given an input dataset X, target y, and quantile ranks qⱼ.
 
     We achieve so-called 'coherent' quantiles by enforcing monotonicity of the predicted quantiles
     with the constraint Xβ⁽ʲ⁾ ≤ Xβ⁽ʲ⁺¹⁾ for each consecutive pair of quantile ranks in an extended
@@ -214,7 +214,7 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
         X, y = check_X_y(X, y, y_numeric=True)
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = y.dtype  # Used to cast predictions to the correct dtype.
-        if np.all(y.astype(int) == y):
+        if np.all(y.astype(np.intp) == y):
             self.y_dtype_ = np.intp  # To satisfy sklearn's `check_regressors_int`.
         y = y.astype(np.float64)  # To support datetime64[ns] and timedelta64[ns].
         if sample_weight is not None:
@@ -228,7 +228,7 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
             X,
             y,
             quantiles=np.asarray(self.quantiles),
-            sample_weight=None if sample_weight is None else np.asarray(sample_weight),
+            sample_weight=sample_weight,
             coherence_buffer=self.coherence_buffer,
         )
         return self
