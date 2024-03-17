@@ -23,7 +23,7 @@ pip install conformal-tights
 
 ### Predicting quantiles
 
-Conformal Tights exposes a meta-estimator called `ConformalCoherentQuantileRegressor` that you can use to wrap any scikit-learn regressor, after which you can use `predict_quantiles` predict conformally calibrated quantiles. Example usage:
+Conformal Tights exposes a meta-estimator called `ConformalCoherentQuantileRegressor` that you can use to wrap any scikit-learn regressor, after which you can use `predict_quantiles` to predict conformally calibrated quantiles. Example usage:
 
 ```python
 from conformal_tights import ConformalCoherentQuantileRegressor
