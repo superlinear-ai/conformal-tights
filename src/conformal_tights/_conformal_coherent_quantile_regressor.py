@@ -275,7 +275,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
                 pass
             else:
                 ŷ_quantiles_df = pd.DataFrame(ŷ_quantiles, index=X.index, columns=quantiles)
-                ŷ_quantiles_df.columns.name = "quantiles"
+                ŷ_quantiles_df.columns.name = "quantile"
                 return ŷ_quantiles_df
         return ŷ_quantiles
 

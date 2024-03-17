@@ -18,7 +18,9 @@ version_provider = "poetry"
 
 [tool.poetry.dependencies]  # https://python-poetry.org/docs/dependency-specification/
 python = ">=3.10,<4.0"
+numpy = ">=1.22.0"
 scikit-learn = ">=1.0.0"
+scipy = ">=1.5.0"
 xgboost = ">=2.0.0"
 
 [tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
