@@ -14,8 +14,10 @@ from tests.conftest import Dataset
 
 @pytest.fixture(
     params=[
-        pytest.param(XGBRegressor(objective="reg:absoluteerror"), id="model:XGBRegressor"),
-        pytest.param(LGBMRegressor(objective="regression_l1"), id="model:LGBMRegressor"),
+        pytest.param(XGBRegressor(objective="reg:absoluteerror"), id="model:XGBRegressor-L1"),
+        pytest.param(XGBRegressor(objective="reg:squarederror"), id="model:XGBRegressor-L2"),
+        pytest.param(LGBMRegressor(objective="regression_l1"), id="model:LGBMRegressor-L1"),
+        pytest.param(LGBMRegressor(objective="regression_l2"), id="model:LGBMRegressor-L2"),
     ]
 )
 def regressor(request: SubRequest) -> BaseEstimator:

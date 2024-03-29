@@ -27,7 +27,7 @@ def coherent_linear_quantile_regression(
     quantiles: FloatVector[F],
     sample_weight: FloatVector[F] | None = None,
     coherence_buffer: int = 3,
-) -> FloatMatrix[F]:
+) -> tuple[FloatMatrix[F], FloatMatrix[F]]:
     """Solve a Coherent Linear Quantile Regression problem.
 
     Minimizes the quantile loss:
@@ -67,6 +67,8 @@ def coherent_linear_quantile_regression(
     -------
     β
         The estimated regression coefficients so that Xβ produces quantile predictions ŷ.
+    β_full
+        The estimated regression coefficients including all auxiliary quantiles.
     """
     # Learn the input dimensions.
     num_samples, num_features = X.shape
@@ -170,10 +172,11 @@ def coherent_linear_quantile_regression(
     # Solve the Coherent Quantile Regression LP.
     result = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs")
     # Extract the solution.
-    β: FloatVector[F] = result.x[: num_quantiles * num_features].astype(y.dtype)
-    β = β.reshape(num_quantiles, num_features).T
-    β = β[:, 0 :: (coherence_buffer + 1)]  # Drop the buffer quantile ranks we introduced earlier.
-    return β
+    β_full: FloatMatrix[F] = result.x[: num_quantiles * num_features].astype(y.dtype)
+    β_full = β_full.reshape(num_quantiles, num_features).T
+    # Drop the buffer quantile ranks we introduced earlier.
+    β = β_full[:, 0 :: (coherence_buffer + 1)]
+    return β, β_full
 
 
 class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
@@ -224,7 +227,7 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
         if self.fit_intercept:
             X = np.hstack([X, np.ones((X.shape[0], 1), dtype=X.dtype)])
         # Fit the coherent quantile regression model.
-        self.β_ = coherent_linear_quantile_regression(
+        self.β_, self.β_full_ = coherent_linear_quantile_regression(
             X,
             y,
             quantiles=np.asarray(self.quantiles),
@@ -246,3 +249,18 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
         # Map back to the training target dtype.
         ŷ = np.squeeze(ŷ.astype(self.y_dtype_), axis=1 if ŷ.shape[1] == 1 else ())
         return ŷ
+
+    def intercept_clip(self, X: FloatMatrix[F], y: FloatVector[F]) -> FloatMatrix[F]:
+        """Compute a clip for a delta on the intercept that retains quantile coherence."""
+        if self.fit_intercept:
+            X = np.hstack([X, np.ones((X.shape[0], 1), dtype=X.dtype)])
+        Q = X @ self.β_full_ - y[:, np.newaxis]
+        β_intercept_clip = np.vstack(
+            [
+                np.insert(np.max(Q[:, :-1] - Q[:, 1:], axis=0), 0, -np.inf),
+                np.append(np.min(Q[:, 1:] - Q[:, :-1], axis=0), np.inf),
+            ]
+        )
+        β_intercept_clip[:, β_intercept_clip[0, :] >= β_intercept_clip[1, :]] = 0
+        β_intercept_clip = β_intercept_clip[:, 0 :: (self.coherence_buffer + 1)]
+        return β_intercept_clip

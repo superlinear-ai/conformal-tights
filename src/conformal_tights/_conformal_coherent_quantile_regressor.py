@@ -122,12 +122,15 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         sample_weight_train, sample_weight_calib = (
             sample_weights[:2] if sample_weight is not None else (None, None)
         )
-        # Split the conformal calibration set into two levels.
+        # Split the conformal calibration set into two levels. If would be less than 128 level 2
+        # examples, use all of them for level 1 instead.
         X_calib_l1, X_calib_l2, y_calib_l1, y_calib_l2, *sample_weights_calib = train_test_split(
             self.X_calib_,
             self.y_calib_,
             *([sample_weight_calib] if sample_weight_calib is not None else []),
-            test_size=self.conformal_calibration_size[0],
+            test_size=self.conformal_calibration_size[0]
+            if round(self.conformal_calibration_size[0] * X.shape[0]) >= 128  # noqa: PLR2004
+            else 1,
             random_state=self.random_state,
         )
         self.sample_weight_calib_l1_, self.sample_weight_calib_l2_ = (
@@ -195,24 +198,29 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             # residuals.
             eps = np.finfo(self.ŷ_calib_l1_.dtype).eps
             abs_ŷ_calib_l1 = np.maximum(np.abs(self.ŷ_calib_l1_), eps)
-            X_cqr = self.ŷ_calib_l1_nonconformity_
-            y_cqr = self.residuals_calib_l1_ / (abs_ŷ_calib_l1 if "/ŷ" in target_type else 1)
+            X_cqr_l1 = self.ŷ_calib_l1_nonconformity_
+            y_cqr_l1 = -self.residuals_calib_l1_ / (abs_ŷ_calib_l1 if "/ŷ" in target_type else 1)
             cqr_l1 = CoherentLinearQuantileRegressor(quantiles=quantiles)
-            cqr_l1.fit(X_cqr, y_cqr, sample_weight=self.sample_weight_calib_l1_)
+            cqr_l1.fit(X_cqr_l1, y_cqr_l1, sample_weight=self.sample_weight_calib_l1_)
             self.conformal_l1_[target_type][quantiles_tuple] = cqr_l1
             # Fit level 2: a per-quantile conformal bias on top of the level 1 conformal quantile
             # predictions of the (relative) residuals.
-            abs_ŷ_calib_l2 = np.maximum(np.abs(self.ŷ_calib_l2_), eps)
-            Δŷ_calib_l2_quantiles = cqr_l1.predict(self.ŷ_calib_l2_nonconformity_)
-            bias_l2 = np.empty(quantiles.shape, dtype=self.ŷ_calib_l1_.dtype)
-            for j, quantile in enumerate(quantiles):
-                bias_l2[j] = np.quantile(
-                    -(
-                        (self.residuals_calib_l2_ / (abs_ŷ_calib_l2 if "/ŷ" in target_type else 1))
-                        + Δŷ_calib_l2_quantiles[:, j]
-                    ),
-                    quantile,
+            bias_l2 = np.zeros(quantiles.shape, dtype=self.ŷ_calib_l1_.dtype)
+            if len(self.ŷ_calib_l2_) >= 128:  # noqa: PLR2004
+                abs_ŷ_calib_l2 = np.maximum(np.abs(self.ŷ_calib_l2_), eps)
+                X_cqr_l2 = self.ŷ_calib_l2_nonconformity_
+                y_cqr_l2 = -self.residuals_calib_l2_ / (
+                    abs_ŷ_calib_l2 if "/ŷ" in target_type else 1
                 )
+                Δŷ_calib_l2_quantiles = cqr_l1.predict(X_cqr_l2)
+                intercept_clip = cqr_l1.intercept_clip(
+                    np.vstack([X_cqr_l1, X_cqr_l2]), np.hstack([y_cqr_l1, y_cqr_l2])
+                )
+                for j, quantile in enumerate(quantiles):
+                    # Clip the bias to retain quantile coherence.
+                    # TODO: Use a weighted quantile.
+                    intercept_l2 = np.quantile(y_cqr_l2 - Δŷ_calib_l2_quantiles[:, j], quantile)
+                    bias_l2[j] = np.clip(intercept_l2, intercept_clip[0, j], intercept_clip[1, j])
             self.conformal_l2_[target_type][quantiles_tuple] = bias_l2
         return cqr_l1, bias_l2  # type: ignore[return-value]
 
