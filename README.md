@@ -51,15 +51,15 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 |   house_id |   0.025 |   0.05 |    0.1 |    0.9 |   0.95 |   0.975 |
 |-----------:|--------:|-------:|-------:|-------:|-------:|--------:|
-|       1357 |  121557 | 130272 | 139913 | 189399 | 211177 |  237309 |
-|       2367 |   86005 |  92617 |  98591 | 130236 | 145686 |  164766 |
-|       2822 |  116523 | 121711 | 134993 | 175583 | 194964 |  216891 |
-|       2126 |  105712 | 113784 | 122145 | 164330 | 183352 |  206224 |
-|       1544 |   85920 |  92311 |  99130 | 133228 | 148895 |  167969 |
+|       1357 |  114783 | 120894 | 131618 | 175760 | 188051 |  205448 |
+|       2367 |   67416 |  80073 |  86753 | 117854 | 127582 |  142321 |
+|       2822 |  119422 | 132047 | 138724 | 178526 | 197246 |  214205 |
+|       2126 |   94030 |  99849 | 110891 | 150249 | 164703 |  182528 |
+|       1544 |   68996 |  81516 |  88231 | 121774 | 132425 |  147110 |
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/b02b3797-de6a-4e0d-b457-ed8e50e3f42c" width="512">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/af22b3c8-7bc6-44fd-b96b-24e8d28bc1fd" width="512">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -67,6 +67,7 @@ Let's visualize the predicted quantiles on the test set:
 ```python
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+
 %config InlineBackend.figure_format = "retina"
 plt.rcParams["font.size"] = 8
 idx = (-ŷ_test.sample(50, random_state=42)).sort_values().index
@@ -115,11 +116,11 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 |   house_id |   0.025 |   0.975 |
 |-----------:|--------:|--------:|
-|       1357 |  108489 |  238396 |
-|       2367 |   76043 |  165189 |
-|       2822 |  101319 |  220247 |
-|       2126 |   94238 |  207501 |
-|       1544 |   75976 |  168741 |
+|       1357 |  107202 |  206290 |
+|       2367 |   66665 |  146004 |
+|       2822 |  115591 |  220314 |
+|       2126 |   85288 |  183037 |
+|       1544 |   67889 |  150646 |
 
 ## Contributing
 
