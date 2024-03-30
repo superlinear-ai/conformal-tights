@@ -1,3 +1,9 @@
+## v0.2.1 (2024-03-30)
+
+### Fix
+
+- round quantiles when target is integer (#7)
+
 ## v0.2.0 (2024-03-30)
 
 ### Feat
