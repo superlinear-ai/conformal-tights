@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]  # https://python-poetry.org/docs/pyproject/
 name = "conformal-tights"
-version = "0.1.1"
+version = "0.2.0"
 description = "A scikit-learn meta-estimator for computing tight conformal predictions"
 authors = ["Laurent Sorber <laurent@radix.ai>"]
 readme = "README.md"
