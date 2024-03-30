@@ -275,7 +275,10 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         Δŷ_quantiles = Δŷ_quantiles[
             np.arange(Δŷ_quantiles.shape[0]), :, np.argmin(dispersion, axis=-1)
         ]
-        ŷ_quantiles: FloatMatrix[F] = (ŷ[:, np.newaxis] + Δŷ_quantiles).astype(self.y_dtype_)
+        ŷ_quantiles: FloatMatrix[F] = ŷ[:, np.newaxis] + Δŷ_quantiles
+        if self.y_is_integer_:
+            ŷ_quantiles = np.round(ŷ_quantiles)
+        ŷ_quantiles = ŷ_quantiles.astype(self.y_dtype_)
         # Convert ŷ_quantiles to a pandas DataFrame if X is a pandas DataFrame.
         if hasattr(X, "dtypes") and hasattr(X, "index"):
             try:
