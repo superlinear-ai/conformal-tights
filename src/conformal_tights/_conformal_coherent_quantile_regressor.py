@@ -101,7 +101,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         y = np.ravel(np.asarray(y))
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = y.dtype  # Used to cast predictions to the correct dtype.
-        if np.all(y.astype(np.intp) == y):
+        self.y_is_integer_: bool = bool(np.all(y.astype(np.intp) == y))
+        if self.y_is_integer_:
             self.y_dtype_ = np.intp  # To satisfy sklearn's `check_regressors_int`.
         y = y.astype(np.float64)  # To support datetime64[ns] and timedelta64[ns].
         if sample_weight is not None:
@@ -351,7 +352,10 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         if quantiles is not None:
             ŷ_quantiles = self.predict_quantiles(X, quantiles=quantiles)
             return ŷ_quantiles
-        ŷ = self.estimator_.predict(X).astype(self.y_dtype_)
+        ŷ = self.estimator_.predict(X)
+        if self.y_is_integer_:
+            ŷ = np.round(ŷ)
+        ŷ = ŷ.astype(self.y_dtype_)
         if hasattr(X, "dtypes") and hasattr(X, "index"):
             try:
                 import pandas as pd
