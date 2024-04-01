@@ -1,3 +1,9 @@
+## v0.2.2 (2024-04-01)
+
+### Fix
+
+- xfail sklearn's check_regressors_int (#9)
+
 ## v0.2.1 (2024-03-30)
 
 ### Fix
