@@ -1,3 +1,9 @@
+## v0.2.4 (2024-04-01)
+
+### Fix
+
+- only convert dtype when target dtype is not integer (#12)
+
 ## v0.2.3 (2024-04-01)
 
 ### Fix
