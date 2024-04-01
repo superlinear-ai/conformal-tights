@@ -1,6 +1,6 @@
 """Conformal Coherent Quantile Regressor meta-estimator."""
 
-from typing import TYPE_CHECKING, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -102,8 +102,6 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = y.dtype  # Used to cast predictions to the correct dtype.
         self.y_is_integer_: bool = bool(np.all(y.astype(np.intp) == y))
-        if self.y_is_integer_:
-            self.y_dtype_ = np.intp  # To satisfy sklearn's `check_regressors_int`.
         y = y.astype(np.float64)  # To support datetime64[ns] and timedelta64[ns].
         if sample_weight is not None:
             check_consistent_length(y, sample_weight)
@@ -276,7 +274,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             np.arange(Δŷ_quantiles.shape[0]), :, np.argmin(dispersion, axis=-1)
         ]
         ŷ_quantiles: FloatMatrix[F] = ŷ[:, np.newaxis] + Δŷ_quantiles
-        if self.y_is_integer_:
+        if self.y_is_integer_ and np.issubdtype(self.y_dtype_, np.integer):
             ŷ_quantiles = np.round(ŷ_quantiles)
         ŷ_quantiles = ŷ_quantiles.astype(self.y_dtype_)
         # Convert ŷ_quantiles to a pandas DataFrame if X is a pandas DataFrame.
@@ -369,6 +367,6 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
                 return ŷ_series
         return ŷ
 
-    def _more_tags(self) -> dict[str, bool]:
+    def _more_tags(self) -> dict[str, Any]:
         """Return more tags for the estimator."""
-        return {"allow_nan": True}
+        return {"allow_nan": True, "_xfail_checks": {"check_regressors_int": "Incompatible check"}}
