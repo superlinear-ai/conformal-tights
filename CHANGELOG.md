@@ -22,6 +22,10 @@
 
 ## v0.1.1 (2024-03-17)
 
+### Build
+
+- make dependency on numpy and scipy explicit (#4)
+
 ## v0.1.0 (2024-03-16)
 
 ### Feat
