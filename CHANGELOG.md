@@ -1,3 +1,9 @@
+## v0.2.3 (2024-04-01)
+
+### Fix
+
+- improve dtype handling in CoherentLinearQuantileRegressor (#10)
+
 ## v0.2.2 (2024-04-01)
 
 ### Fix
