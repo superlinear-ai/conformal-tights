@@ -101,11 +101,10 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         y = np.ravel(np.asarray(y))
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = y.dtype  # Used to cast predictions to the correct dtype.
-        self.y_is_integer_: bool = bool(np.all(y.astype(np.intp) == y))
         y = y.astype(np.float64)  # To support datetime64[ns] and timedelta64[ns].
         if sample_weight is not None:
             check_consistent_length(y, sample_weight)
-            sample_weight = np.ravel(np.asarray(sample_weight).astype(np.float64))
+            sample_weight = np.ravel(np.asarray(sample_weight).astype(y.dtype))
         # Use the smallest of the relative and absolute calibration sizes.
         calib_size = min(
             int(self.conformal_calibration_size[0] * X.shape[0]), self.conformal_calibration_size[1]
@@ -274,9 +273,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             np.arange(Δŷ_quantiles.shape[0]), :, np.argmin(dispersion, axis=-1)
         ]
         ŷ_quantiles: FloatMatrix[F] = ŷ[:, np.newaxis] + Δŷ_quantiles
-        if self.y_is_integer_ and np.issubdtype(self.y_dtype_, np.integer):
-            ŷ_quantiles = np.round(ŷ_quantiles)
-        ŷ_quantiles = ŷ_quantiles.astype(self.y_dtype_)
+        if not np.issubdtype(self.y_dtype_, np.integer):
+            ŷ_quantiles = ŷ_quantiles.astype(self.y_dtype_)
         # Convert ŷ_quantiles to a pandas DataFrame if X is a pandas DataFrame.
         if hasattr(X, "dtypes") and hasattr(X, "index"):
             try:
@@ -354,9 +352,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             ŷ_quantiles = self.predict_quantiles(X, quantiles=quantiles)
             return ŷ_quantiles
         ŷ = self.estimator_.predict(X)
-        if self.y_is_integer_:
-            ŷ = np.round(ŷ)
-        ŷ = ŷ.astype(self.y_dtype_)
+        if not np.issubdtype(self.y_dtype_, np.integer):
+            ŷ = ŷ.astype(self.y_dtype_)
         if hasattr(X, "dtypes") and hasattr(X, "index"):
             try:
                 import pandas as pd
@@ -369,4 +366,9 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
 
     def _more_tags(self) -> dict[str, Any]:
         """Return more tags for the estimator."""
-        return {"allow_nan": True, "_xfail_checks": {"check_regressors_int": "Incompatible check"}}
+        return {
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_sample_weights_invariance": "Conformal calibration not invariant to removing zero-weight examples"
+            },
+        }
