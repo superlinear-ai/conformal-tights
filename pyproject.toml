@@ -26,6 +26,7 @@ xgboost = ">=2.0.0"
 [tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
 commitizen = ">=3.2.1"
 coverage = { extras = ["toml"], version = ">=7.2.5" }
+darts = ">=0.25.0"
 lightgbm = ">=4.3.0"
 mypy = ">=1.2.0"
 pandas = ">=2.2.1"

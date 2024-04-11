@@ -2,14 +2,19 @@
 
 # 👖 Conformal Tights
 
-A [scikit-learn meta-estimator](https://scikit-learn.org/stable/glossary.html#term-meta-estimator) that adds [conformal prediction](https://en.wikipedia.org/wiki/Conformal_prediction) of coherent [quantiles](https://en.wikipedia.org/wiki/Quantile) and [intervals](https://en.wikipedia.org/wiki/Prediction_interval) to any [scikit-learn regressor](https://scikit-learn.org/stable/glossary.html#term-regressor). Features:
+Conformal Tights is a Python package that exports:
+- a [scikit-learn](https://github.com/scikit-learn/scikit-learn) [meta-estimator](https://scikit-learn.org/stable/glossary.html#term-meta-estimator) that adds [conformal prediction](https://en.wikipedia.org/wiki/Conformal_prediction) of coherent [quantiles](https://en.wikipedia.org/wiki/Quantile) and [intervals](https://en.wikipedia.org/wiki/Prediction_interval) to any [scikit-learn regressor](https://scikit-learn.org/stable/glossary.html#term-regressor)
+- a [Darts](https://github.com/unit8co/darts) [forecaster](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.regression_model.html) that adds conformally calibrated [probabilistic time series forecasting](https://unit8co.github.io/darts/userguide/forecasting_overview.html#probabilistic-forecasts) to any scikit-learn regressor
 
-1. 🍬 *Meta-estimator*: add prediction of quantiles and intervals to any scikit-learn regressor
-2. 🌡️ *Conformally calibrated:* accurate quantiles, and intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability)
-3. 🚦 *Coherent quantiles:* quantiles increase monotonically instead of [crossing](https://github.com/dmlc/xgboost/issues/9848) [each other](https://github.com/microsoft/LightGBM/issues/3447)
-4. 👖 *Tight quantiles:* selects the lowest [dispersion](https://en.wikipedia.org/wiki/Statistical_dispersion) that provides the desired coverage
-5. 🎁 *Data efficient:* requires only a small number of calibration examples to fit
-6. 🐼 *Pandas support:* optionally predict on DataFrames and receive DataFrame output
+## Features
+
+1. 🍬 *Sklearn meta-estimator*: add conformal prediction of quantiles and intervals to any scikit-learn regressor
+2. 🔮 *Darts forecaster:* add conformally calibrated probabilistic time series forecasting to any scikit-learn regressor
+3. 🌡️ *Conformally calibrated:* accurate quantiles, and intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability)
+4. 🚦 *Coherent quantiles:* quantiles increase monotonically instead of [crossing](https://github.com/dmlc/xgboost/issues/9848) [each other](https://github.com/microsoft/LightGBM/issues/3447)
+5. 👖 *Tight quantiles:* selects the lowest [dispersion](https://en.wikipedia.org/wiki/Statistical_dispersion) that provides the desired coverage
+6. 🎁 *Data efficient:* requires only a small number of calibration examples to fit
+7. 🐼 *Pandas support:* optionally predict on DataFrames and receive DataFrame output
 
 ## Using
 
@@ -121,6 +126,100 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 |       2822 | 115592   |  220315 |
 |       2126 |  85288.1 |  183038 |
 |       1544 |  67889.9 |  150646 |
+
+### Time series forecasting
+
+```python
+from darts.datasets import ElectricityConsumptionZurichDataset
+
+# Load a forecasting dataset
+ts = ElectricityConsumptionZurichDataset().load()
+ts = ts.resample("h")
+
+# Split the dataset into features X and target y
+X = ts.drop_columns(["Value_NE5", "Value_NE7"])
+y = ts["Value_NE5"]  # NE5 = Household energy consumption
+
+# Add categorical features to X
+X = X.add_holidays(country_code="CH")
+X = X.add_datetime_attribute("month")
+X = X.add_datetime_attribute("dayofweek")
+X = X.add_datetime_attribute("hour")
+```
+
+Printing the head of `X.pd_dataframe()` yields:
+
+| Timestamp           |   Hr [%Hr] |   RainDur [min] |   StrGlo [W/m2] |   T [°C] |   WD [°] |   WVs [m/s] |   WVv [m/s] |   p [hPa] |   holidays |   month |   dayofweek |   hour |
+|:--------------------|-----------:|----------------:|----------------:|---------:|---------:|------------:|------------:|----------:|-----------:|--------:|------------:|-------:|
+| 2022-08-30 20:00:00 |       70.2 |             0.0 |             0.0 |     19.9 |    290.2 |         1.7 |         1.5 |     968.5 |        0.0 |     7.0 |         1.0 |   20.0 |
+| 2022-08-30 21:00:00 |       70.1 |             0.0 |             0.0 |     19.5 |    239.2 |         1.0 |         0.7 |     968.1 |        0.0 |     7.0 |         1.0 |   21.0 |
+| 2022-08-30 22:00:00 |       71.3 |             0.0 |             0.0 |     19.5 |     28.9 |         1.5 |         1.3 |     967.9 |        0.0 |     7.0 |         1.0 |   22.0 |
+| 2022-08-30 23:00:00 |       80.4 |             0.0 |             0.0 |     18.9 |     24.3 |         1.6 |         1.1 |     967.9 |        0.0 |     7.0 |         1.0 |   23.0 |
+| 2022-08-31 00:00:00 |       81.6 |             1.0 |             0.0 |     18.7 |    293.5 |         0.9 |         0.3 |     967.8 |        0.0 |     7.0 |         2.0 |    0.0 |
+
+```python
+from conformal_tights import DartsForecaster, ConformalCoherentQuantileRegressor
+from pandas import Timestamp
+from xgboost import XGBRegressor
+
+# Split the dataset into train and test
+test_cutoff = Timestamp("2022-06-01")
+y_train, y_test = y.split_after(test_cutoff)
+X_train, X_test = X.split_after(test_cutoff)
+
+# Now let's:
+# 1. Create an sklearn regressor of our choosing, in this case `XGBRegressor`
+# 2. Add conformal quantile prediction to the regressor with `ConformalCoherentQuantileRegressor`
+# 3. Add probabilistic forecasting to the conformal regressor with `DartsForecaster`
+regressor = XGBRegressor()
+conformal_regressor = ConformalCoherentQuantileRegressor(estimator=regressor)
+forecaster = DartsForecaster(
+    model=conformal_regressor,
+    # Add last 5 days of the target to the prediction features
+    lags=5 * 24,
+    # Add the current day's covariates to the prediction features
+    lags_future_covariates=[0],
+    # Indicate which of the covariates are categorical
+    categorical_future_covariates=["holidays", "month", "dayofweek", "hour"],
+)
+
+# Fit the forecaster given the target and covariates
+forecaster.fit(y_train, future_covariates=X_train)
+```
+
+```python
+# Make a probabilistic forecast 5 days into the future
+forecast = forecaster.predict(n=5 * 24, future_covariates=X_test, num_samples=500)
+```
+
+Let's visualize the forecast and its prediction interval on the test set:
+
+<img src="https://github.com/radix-ai/conformal-tights/assets/..." width="512">
+
+<details>
+<summary>Expand to see the code that generated the graph above</summary>
+
+```python
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+%config InlineBackend.figure_format = "retina"
+plt.rc("font", family="DejaVu Sans", size=10)
+plt.figure(figsize=(8, 4.5))
+y_train[-2 * 24 :].plot(label="Actual (train)")
+y_test[: len(forecast)].plot(label="Actual (test)")
+forecast.plot(label="Forecast with 90% PI")
+plt.gca().set_xlabel("")
+plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x/1000:,.0f} MWh"))
+plt.gca().tick_params(axis="both", labelsize=10)
+plt.gca().spines["top"].set_visible(False)
+plt.gca().spines["right"].set_visible(False)
+legend = plt.legend(loc="upper right", title="Energy consumption")
+legend.get_title().set_fontweight("bold")
+plt.tight_layout()
+plt.show()
+```
+</details>
 
 ## Contributing
 
