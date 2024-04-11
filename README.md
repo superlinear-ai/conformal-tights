@@ -194,7 +194,7 @@ forecast = forecaster.predict(n=5 * 24, future_covariates=X_test, num_samples=50
 
 Let's visualize the forecast and its prediction interval on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/..." width="512">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/efab91c5-e2c8-401c-937d-c0bf37fbeea1">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
