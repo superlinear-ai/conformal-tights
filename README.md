@@ -147,15 +147,15 @@ X = X.add_datetime_attribute("dayofweek")
 X = X.add_datetime_attribute("hour")
 ```
 
-Printing the head of `X.pd_dataframe()` yields:
+Printing the tail of `X.pd_dataframe()` yields:
 
-| Timestamp           |   Hr [%Hr] |   RainDur [min] |   StrGlo [W/m2] |   T [°C] |   WD [°] |   WVs [m/s] |   WVv [m/s] |   p [hPa] |   holidays |   month |   dayofweek |   hour |
-|:--------------------|-----------:|----------------:|----------------:|---------:|---------:|------------:|------------:|----------:|-----------:|--------:|------------:|-------:|
-| 2022-08-30 20:00:00 |       70.2 |             0.0 |             0.0 |     19.9 |    290.2 |         1.7 |         1.5 |     968.5 |        0.0 |     7.0 |         1.0 |   20.0 |
-| 2022-08-30 21:00:00 |       70.1 |             0.0 |             0.0 |     19.5 |    239.2 |         1.0 |         0.7 |     968.1 |        0.0 |     7.0 |         1.0 |   21.0 |
-| 2022-08-30 22:00:00 |       71.3 |             0.0 |             0.0 |     19.5 |     28.9 |         1.5 |         1.3 |     967.9 |        0.0 |     7.0 |         1.0 |   22.0 |
-| 2022-08-30 23:00:00 |       80.4 |             0.0 |             0.0 |     18.9 |     24.3 |         1.6 |         1.1 |     967.9 |        0.0 |     7.0 |         1.0 |   23.0 |
-| 2022-08-31 00:00:00 |       81.6 |             1.0 |             0.0 |     18.7 |    293.5 |         0.9 |         0.3 |     967.8 |        0.0 |     7.0 |         2.0 |    0.0 |
+| Timestamp      |   Hr [%Hr] |   RainDur [min] |   StrGlo [W/m2] |   T [°C] |   WD [°] |   WVs [m/s] |   WVv [m/s] |   p [hPa] |   holidays |   month |   dayofweek |   hour |
+|:---------------|-----------:|----------------:|----------------:|---------:|---------:|------------:|------------:|----------:|-----------:|--------:|------------:|-------:|
+| 2022‑08‑30 20h |       70.2 |             0.0 |             0.0 |     19.9 |    290.2 |         1.7 |         1.5 |     968.5 |        0.0 |     7.0 |         1.0 |   20.0 |
+| 2022‑08‑30 21h |       70.1 |             0.0 |             0.0 |     19.5 |    239.2 |         1.0 |         0.7 |     968.1 |        0.0 |     7.0 |         1.0 |   21.0 |
+| 2022‑08‑30 22h |       71.3 |             0.0 |             0.0 |     19.5 |     28.9 |         1.5 |         1.3 |     967.9 |        0.0 |     7.0 |         1.0 |   22.0 |
+| 2022‑08‑30 23h |       80.4 |             0.0 |             0.0 |     18.9 |     24.3 |         1.6 |         1.1 |     967.9 |        0.0 |     7.0 |         1.0 |   23.0 |
+| 2022‑08‑31 00h |       81.6 |             1.0 |             0.0 |     18.7 |    293.5 |         0.9 |         0.3 |     967.8 |        0.0 |     7.0 |         2.0 |    0.0 |
 
 ```python
 from conformal_tights import DartsForecaster, ConformalCoherentQuantileRegressor
@@ -170,24 +170,19 @@ X_train, X_test = X.split_after(test_cutoff)
 # Now let's:
 # 1. Create an sklearn regressor of our choosing, in this case `XGBRegressor`
 # 2. Add conformal quantile prediction to the regressor with `ConformalCoherentQuantileRegressor`
-# 3. Add probabilistic forecasting to the conformal regressor with `DartsForecaster`
-regressor = XGBRegressor()
-conformal_regressor = ConformalCoherentQuantileRegressor(estimator=regressor)
+# 3. Add probabilistic forecasting to the conformal predictor with `DartsForecaster`
+my_regressor = XGBRegressor()
+conformal_predictor = ConformalCoherentQuantileRegressor(estimator=my_regressor)
 forecaster = DartsForecaster(
-    model=conformal_regressor,
-    # Add last 5 days of the target to the prediction features
-    lags=5 * 24,
-    # Add the current day's covariates to the prediction features
-    lags_future_covariates=[0],
-    # Indicate which of the covariates are categorical
-    categorical_future_covariates=["holidays", "month", "dayofweek", "hour"],
+    model=conformal_predictor,
+    lags=5 * 24,  # Add the last 5 days of the target to the prediction features
+    lags_future_covariates=[0],  # Add the current timestamp's covariates to the prediction features
+    categorical_future_covariates=["holidays", "month", "dayofweek", "hour"],  # Convert these covariates to pd.Categorical
 )
 
 # Fit the forecaster given the target and covariates
 forecaster.fit(y_train, future_covariates=X_train)
-```
 
-```python
 # Make a probabilistic forecast 5 days into the future
 forecast = forecaster.predict(n=5 * 24, future_covariates=X_test, num_samples=500)
 ```
@@ -212,8 +207,6 @@ forecast.plot(label="Forecast with 90% PI")
 plt.gca().set_xlabel("")
 plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x/1000:,.0f} MWh"))
 plt.gca().tick_params(axis="both", labelsize=10)
-plt.gca().spines["top"].set_visible(False)
-plt.gca().spines["right"].set_visible(False)
 legend = plt.legend(loc="upper right", title="Energy consumption")
 legend.get_title().set_fontweight("bold")
 plt.tight_layout()
