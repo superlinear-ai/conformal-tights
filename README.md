@@ -18,6 +18,13 @@ Conformal Tights is a Python package that exports:
 
 ## Using
 
+### Quick links
+
+1. [Installing](#installing)
+2. [Predicting quantiles](#predicting-quantiles)
+3. [Predicting intervals](#predicting-intervals)
+4. [Forecasting time series](#forecasting-time-series)
+
 ### Installing
 
 First, install this package with:
@@ -64,7 +71,7 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/af22b3c8-7bc6-44fd-b96b-24e8d28bc1fd" width="512">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/7f77b50b-8666-4e0f-adb4-6afa9c5f40ca">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -74,31 +81,42 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
 %config InlineBackend.figure_format = "retina"
-plt.rcParams["font.size"] = 8
-idx = (-ŷ_test.sample(50, random_state=42)).sort_values().index
-y_ticks = list(range(1, len(idx) + 1))
-plt.figure(figsize=(4, 5))
+plt.rc("font", family="DejaVu Sans", size=10)
+plt.figure(figsize=(8, 4.5))
+idx = ŷ_test.sample(50, random_state=42).sort_values().index
+x = list(range(1, len(idx) + 1))
+x_ticks = [1, *list(range(5, len(idx) + 1, 5))]
 for j in range(3):
     end = ŷ_test_quantiles.shape[1] - 1 - j
     coverage = round(100 * (ŷ_test_quantiles.columns[end] - ŷ_test_quantiles.columns[j]))
-    plt.barh(
-        y_ticks,
+    plt.bar(
+        x,
         ŷ_test_quantiles.loc[idx].iloc[:, end] - ŷ_test_quantiles.loc[idx].iloc[:, j],
-        left=ŷ_test_quantiles.loc[idx].iloc[:, j],
+        bottom=ŷ_test_quantiles.loc[idx].iloc[:, j],
         label=f"{coverage}% Prediction interval",
         color=["#b3d9ff", "#86bfff", "#4da6ff"][j],
     )
-plt.plot(y_test.loc[idx], y_ticks, "s", markersize=3, markerfacecolor="none", markeredgecolor="#e74c3c", label="Actual value")
-plt.plot(ŷ_test.loc[idx], y_ticks, "s", color="blue", markersize=0.6, label="Predicted value")
-plt.xlabel("House price")
-plt.ylabel("Test house index")
-plt.yticks(y_ticks, y_ticks)
-plt.tick_params(axis="y", labelsize=6)
-plt.grid(axis="x", color="lightsteelblue", linestyle=":", linewidth=0.5)
-plt.gca().xaxis.set_major_formatter(ticker.StrMethodFormatter("${x:,.0f}"))
+plt.plot(
+    x,
+    y_test.loc[idx],
+    "s",
+    markersize=4,
+    markerfacecolor="none",
+    markeredgecolor="#e74c3c",
+    markeredgewidth=1.414,
+    label="Actual value",
+)
+plt.plot(x, ŷ_test.loc[idx], "s", color="blue", markersize=2, label="Predicted value")
+plt.xlabel("Test house index")
+plt.xticks(x_ticks, x_ticks)
+plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("${x:,.0f}"))
+plt.gca().tick_params(axis="both", labelsize=10)
 plt.gca().spines["top"].set_visible(False)
 plt.gca().spines["right"].set_visible(False)
-plt.legend()
+plt.grid(False)
+plt.grid(axis="y", color="lightsteelblue", linestyle=":", linewidth=0.5)
+legend = plt.legend(loc="upper left", title="House price")
+legend.get_title().set_fontweight("bold")
 plt.tight_layout()
 plt.show()
 ```
@@ -127,7 +145,7 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 |       2126 |  85288.1 |  183038 |
 |       1544 |  67889.9 |  150646 |
 
-### Time series forecasting
+### Forecasting time series
 
 ```python
 from darts.datasets import ElectricityConsumptionZurichDataset
@@ -180,7 +198,7 @@ forecaster = DartsForecaster(
     categorical_future_covariates=["holidays", "month", "dayofweek", "hour"],  # Convert these covariates to pd.Categorical
 )
 
-# Fit the forecaster given the target and covariates
+# Fit the forecaster
 forecaster.fit(y_train, future_covariates=X_train)
 
 # Make a probabilistic forecast 5 days into the future
@@ -189,7 +207,7 @@ forecast = forecaster.predict(n=5 * 24, future_covariates=X_test, num_samples=50
 
 Let's visualize the forecast and its prediction interval on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/efab91c5-e2c8-401c-937d-c0bf37fbeea1">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/b7084d86-c933-408d-bf79-c053c0aa387d">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -203,7 +221,7 @@ plt.rc("font", family="DejaVu Sans", size=10)
 plt.figure(figsize=(8, 4.5))
 y_train[-2 * 24 :].plot(label="Actual (train)")
 y_test[: len(forecast)].plot(label="Actual (test)")
-forecast.plot(label="Forecast with 90% PI")
+forecast.plot(label="Forecast with\n90% Prediction interval")
 plt.gca().set_xlabel("")
 plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x/1000:,.0f} MWh"))
 plt.gca().tick_params(axis="both", labelsize=10)
