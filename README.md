@@ -9,7 +9,7 @@ Conformal Tights is a Python package that exports:
 ## Features
 
 1. 🍬 *Sklearn meta-estimator*: add conformal prediction of quantiles and intervals to any scikit-learn regressor
-2. 🔮 *Darts forecaster:* add conformally calibrated probabilistic time series forecasting to any scikit-learn regressor
+2. 🔮 *Darts forecaster:* add conformally calibrated probabilistic forecasting to any scikit-learn regressor
 3. 🌡️ *Conformally calibrated:* accurate quantiles, and intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability)
 4. 🚦 *Coherent quantiles:* quantiles increase monotonically instead of [crossing](https://github.com/dmlc/xgboost/issues/9848) [each other](https://github.com/microsoft/LightGBM/issues/3447)
 5. 👖 *Tight quantiles:* selects the lowest [dispersion](https://en.wikipedia.org/wiki/Statistical_dispersion) that provides the desired coverage
@@ -27,15 +27,13 @@ Conformal Tights is a Python package that exports:
 
 ### Installing
 
-First, install this package with:
-
 ```sh
 pip install conformal-tights
 ```
 
 ### Predicting quantiles
 
-Conformal Tights exposes a meta-estimator called `ConformalCoherentQuantileRegressor` that you can use to wrap any scikit-learn regressor, after which you can use `predict_quantiles` to predict conformally calibrated quantiles. Example usage:
+Conformal Tights exports a meta-estimator called `ConformalCoherentQuantileRegressor` that you can use to equip any scikit-learn regressor with a `predict_quantiles` method that predicts conformally calibrated quantiles. Example usage:
 
 ```python
 from conformal_tights import ConformalCoherentQuantileRegressor
@@ -47,15 +45,15 @@ from xgboost import XGBRegressor
 X, y = fetch_openml("ames_housing", version=1, return_X_y=True, as_frame=True, parser="auto")
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
 
-# Create a regressor, wrap it, and fit on the train set
+# Create a regressor, equip it with conformal prediction, and fit on the train set
 my_regressor = XGBRegressor(objective="reg:absoluteerror")
 conformal_predictor = ConformalCoherentQuantileRegressor(estimator=my_regressor)
 conformal_predictor.fit(X_train, y_train)
 
-# Predict with the wrapped regressor
+# Predict with the underlying regressor
 ŷ_test = conformal_predictor.predict(X_test)
 
-# Predict quantiles with the conformal wrapper
+# Predict quantiles with the conformal predictor
 ŷ_test_quantiles = conformal_predictor.predict_quantiles(X_test, quantiles=(0.025, 0.05, 0.1, 0.9, 0.95, 0.975))
 ```
 
@@ -71,7 +69,7 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/7f77b50b-8666-4e0f-adb4-6afa9c5f40ca">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/e0db52ce-e891-4756-8de5-c5b89bf0b77e">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -104,21 +102,20 @@ plt.plot(
     markerfacecolor="none",
     markeredgecolor="#e74c3c",
     markeredgewidth=1.414,
-    label="Actual value",
+    label="Actual (test)",
 )
-plt.plot(x, ŷ_test.loc[idx], "s", color="blue", markersize=2, label="Predicted value")
-plt.xlabel("Test house index")
+plt.plot(x, ŷ_test.loc[idx], "s", color="blue", markersize=2, label="Predicted (test)")
+plt.xlabel("House")
 plt.xticks(x_ticks, x_ticks)
-plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter("${x:,.0f}"))
+plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x/1000:,.0f}k"))
 plt.gca().tick_params(axis="both", labelsize=10)
 plt.gca().spines["top"].set_visible(False)
 plt.gca().spines["right"].set_visible(False)
 plt.grid(False)
-plt.grid(axis="y", color="lightsteelblue", linestyle=":", linewidth=0.5)
+plt.grid(axis="y")
 legend = plt.legend(loc="upper left", title="House price")
 legend.get_title().set_fontweight("bold")
 plt.tight_layout()
-plt.show()
 ```
 </details>
 
@@ -127,7 +124,7 @@ plt.show()
 In addition to quantile prediction, you can use `predict_interval` to predict conformally calibrated prediction intervals. Compared to quantiles, these focus on reliable coverage over quantile accuracy. Example usage:
 
 ```python
-# Predict an interval for each example with the conformal wrapper
+# Predict an interval for each example with the conformal predictor
 ŷ_test_interval = conformal_predictor.predict_interval(X_test, coverage=0.95)
 
 # Measure the coverage of the prediction intervals on the test set
@@ -147,6 +144,8 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 ### Forecasting time series
 
+Conformal Tights also exports a Darts forecaster called `DartsForecaster` that uses a `ConformalCoherentQuantileRegressor` to make conformally calibrated probabilistic time series forecasts. To demonstrate its usage, let's begin by loading a time series dataset:
+
 ```python
 from darts.datasets import ElectricityConsumptionZurichDataset
 
@@ -154,18 +153,18 @@ from darts.datasets import ElectricityConsumptionZurichDataset
 ts = ElectricityConsumptionZurichDataset().load()
 ts = ts.resample("h")
 
-# Split the dataset into features X and target y
+# Split the dataset into covariates X and target y
 X = ts.drop_columns(["Value_NE5", "Value_NE7"])
 y = ts["Value_NE5"]  # NE5 = Household energy consumption
 
-# Add categorical features to X
+# Add categorical covariates to X
 X = X.add_holidays(country_code="CH")
 X = X.add_datetime_attribute("month")
 X = X.add_datetime_attribute("dayofweek")
 X = X.add_datetime_attribute("hour")
 ```
 
-Printing the tail of `X.pd_dataframe()` yields:
+Printing the tail of the covariates time series `X.pd_dataframe()` yields:
 
 | Timestamp      |   Hr [%Hr] |   RainDur [min] |   StrGlo [W/m2] |   T [°C] |   WD [°] |   WVs [m/s] |   WVv [m/s] |   p [hPa] |   holidays |   month |   dayofweek |   hour |
 |:---------------|-----------:|----------------:|----------------:|---------:|---------:|------------:|------------:|----------:|-----------:|--------:|------------:|-------:|
@@ -174,6 +173,8 @@ Printing the tail of `X.pd_dataframe()` yields:
 | 2022‑08‑30 22h |       71.3 |             0.0 |             0.0 |     19.5 |     28.9 |         1.5 |         1.3 |     967.9 |        0.0 |     7.0 |         1.0 |   22.0 |
 | 2022‑08‑30 23h |       80.4 |             0.0 |             0.0 |     18.9 |     24.3 |         1.6 |         1.1 |     967.9 |        0.0 |     7.0 |         1.0 |   23.0 |
 | 2022‑08‑31 00h |       81.6 |             1.0 |             0.0 |     18.7 |    293.5 |         0.9 |         0.3 |     967.8 |        0.0 |     7.0 |         2.0 |    0.0 |
+
+We can now equip a scikit-learn regressor with conformal prediction using `ConformalCoherentQuantileRegressor` as before, and then equip that conformal predictor with probabilistic time series forecasting using `DartsForecaster`:
 
 ```python
 from conformal_tights import DartsForecaster, ConformalCoherentQuantileRegressor
@@ -228,7 +229,6 @@ plt.gca().tick_params(axis="both", labelsize=10)
 legend = plt.legend(loc="upper right", title="Energy consumption")
 legend.get_title().set_fontweight("bold")
 plt.tight_layout()
-plt.show()
 ```
 </details>
 
