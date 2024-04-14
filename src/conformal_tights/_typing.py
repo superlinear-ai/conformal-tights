@@ -9,3 +9,4 @@ F = TypeVar("F", np.float32, np.float64)
 
 FloatVector: TypeAlias = npt.NDArray[F]
 FloatMatrix: TypeAlias = npt.NDArray[F]
+FloatTensor: TypeAlias = npt.NDArray[F]
