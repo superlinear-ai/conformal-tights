@@ -6,7 +6,10 @@ import pandas as pd
 import pytest
 import sklearn.datasets
 from _pytest.fixtures import SubRequest
+from lightgbm import LGBMRegressor
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
+from xgboost import XGBRegressor
 
 Dataset: TypeAlias = tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]
 
@@ -32,3 +35,16 @@ def dataset(request: SubRequest) -> Dataset:
     # Split in train and test set.
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
     return X_train, X_test, y_train, y_test
+
+
+@pytest.fixture(
+    params=[
+        pytest.param(XGBRegressor(objective="reg:absoluteerror"), id="model:XGBRegressor-L1"),
+        pytest.param(XGBRegressor(objective="reg:squarederror"), id="model:XGBRegressor-L2"),
+        pytest.param(LGBMRegressor(objective="regression_l1"), id="model:LGBMRegressor-L1"),
+        pytest.param(LGBMRegressor(objective="regression_l2"), id="model:LGBMRegressor-L2"),
+    ]
+)
+def regressor(request: SubRequest) -> BaseEstimator:
+    """Return a scikit-learn regressor."""
+    return request.param

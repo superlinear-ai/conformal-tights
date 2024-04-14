@@ -90,8 +90,6 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         categorical_past_covariates: str | list[str] | None = None,
         categorical_future_covariates: str | list[str] | None = None,
         categorical_static_covariates: str | list[str] | None = None,
-        # Probabilistic darts.models.RegressionModel parameters.
-        quantiles: npt.ArrayLike = (0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975),
     ) -> None:
         """Initialize a Darts Conformal Coherent Quantile Regressor."""
         # Verify that the required dependencies are installed.
@@ -103,7 +101,6 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
             raise ImportError(required_dependencies) from None
         # Initialise _LikelihoodMixin.
         self.likelihood = "quantile"
-        self.quantiles, self._median_idx = self._prepare_quantiles(quantiles)
         self._model_container = self._get_model_container()
         self._rng = check_random_state(model.random_state)  # Generator for sampling.
         # Initialise darts.models.RegressionModel.
@@ -172,9 +169,8 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
             cat_col = training_samples_df[cols[cat_col_index]].astype("category")
             self.cat_col_categories_[cat_col_index] = cat_col.cat.categories
             training_samples_df[cols[cat_col_index]] = cat_col
-        # Fill the _model_container with adapted versions of the wrapped regressor.
-        for quantile in self.quantiles:
-            self._model_container[quantile] = _DartsAdapter(self.model, quantile, self.quantiles)
+        # Store the (modified) model for filling the model container in _predict_and_sample.
+        self.central_model_ = self.model
         return training_samples_df, training_labels
 
     def _predict_and_sample(
@@ -182,9 +178,19 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         x: FloatMatrix[F],
         num_samples: int,
         predict_likelihood_parameters: bool,  # noqa: FBT001
+        quantiles: npt.ArrayLike = (0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975),
         **kwargs: Any,
     ) -> FloatMatrix[F] | FloatTensor[F]:
         """Override inference data to add support for categorical covariates."""
+        # Instead of choosing the quantiles at initialisation time, allow users to set the quantiles
+        # of DartsForecaster.predict at prediction time.
+        if getattr(self, "quantiles", None) != quantiles:
+            self.quantiles, self._median_idx = self._prepare_quantiles(quantiles)
+            self._model_container.clear()
+            for quantile in self.quantiles:
+                self._model_container[quantile] = _DartsAdapter(
+                    self.central_model_, quantile, self.quantiles
+                )
         # Convert categorical columns to pd.Categorical so that the wrapped regressor can handle
         # them appropriately.
         x_df = pd.DataFrame(x)

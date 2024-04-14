@@ -47,6 +47,7 @@ shellcheck-py = ">=0.9.0"
 cruft = ">=2.14.0"
 ipykernel = ">=6.29.2"
 matplotlib = ">=3.8.3"
+nbconvert = ">=7.16.3"
 pdoc = ">=13.1.1"
 tabulate = ">=0.9.0"
 
@@ -105,6 +106,17 @@ max-doc-length = 100
 convention = "numpy"
 
 [tool.poe.tasks]  # https://github.com/nat-n/poethepoet
+
+  [tool.poe.tasks.readme]
+  help = "Generate this package's README"
+  cmd = """
+    jupyter nbconvert notebooks/README.ipynb
+      --to markdown
+      --TagRemovePreprocessor.enabled=True
+      --TagRemovePreprocessor.remove_cell_tags remove_cell
+      --TagRemovePreprocessor.remove_all_outputs_tags remove_output
+      --TagRemovePreprocessor.remove_input_tags remove_input
+  """
 
   [tool.poe.tasks.docs]
   help = "Generate this package's docs"

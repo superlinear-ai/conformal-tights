@@ -1,28 +1,12 @@
 """Test the Conformal Coherent Quantile Regressor."""
 
 import numpy as np
-import pytest
-from _pytest.fixtures import SubRequest
-from lightgbm import LGBMRegressor
 from sklearn.base import BaseEstimator
 from sklearn.utils.estimator_checks import check_estimator
 from xgboost import XGBRegressor
 
 from conformal_tights import ConformalCoherentQuantileRegressor
 from tests.conftest import Dataset
-
-
-@pytest.fixture(
-    params=[
-        pytest.param(XGBRegressor(objective="reg:absoluteerror"), id="model:XGBRegressor-L1"),
-        pytest.param(XGBRegressor(objective="reg:squarederror"), id="model:XGBRegressor-L2"),
-        pytest.param(LGBMRegressor(objective="regression_l1"), id="model:LGBMRegressor-L1"),
-        pytest.param(LGBMRegressor(objective="regression_l2"), id="model:LGBMRegressor-L2"),
-    ]
-)
-def regressor(request: SubRequest) -> BaseEstimator:
-    """Return a regressor."""
-    return request.param
 
 
 def test_conformal_quantile_regressor_coverage(dataset: Dataset, regressor: BaseEstimator) -> None:
@@ -34,8 +18,8 @@ def test_conformal_quantile_regressor_coverage(dataset: Dataset, regressor: Base
     model.fit(X_train, y_train)
     # Verify the coherence of the predicted quantiles.
     ŷ_quantiles = model.predict(X_test, quantiles=np.linspace(0.1, 0.9, 3))
-    for i in range(ŷ_quantiles.shape[1] - 1):
-        assert np.all(ŷ_quantiles.iloc[:, i] <= ŷ_quantiles.iloc[:, i + 1])
+    for j in range(ŷ_quantiles.shape[1] - 1):
+        assert np.all(ŷ_quantiles.iloc[:, j] <= ŷ_quantiles.iloc[:, j + 1])
     # Verify the coverage of the predicted intervals.
     for desired_coverage in (0.7, 0.8, 0.9):
         ŷ_interval = model.predict(X_test, coverage=desired_coverage)
