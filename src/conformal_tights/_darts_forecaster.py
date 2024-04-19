@@ -35,8 +35,8 @@ else:
             _LikelihoodMixin,
         )
     except ImportError:
-        FUTURE_LAGS_TYPE = None
-        LAGS_TYPE = None
+        FUTURE_LAGS_TYPE = int
+        LAGS_TYPE = list[int]
 
         class TimeSeries: ...
 
