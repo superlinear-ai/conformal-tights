@@ -35,8 +35,8 @@ else:
             _LikelihoodMixin,
         )
     except ImportError:
-        FUTURE_LAGS_TYPE = int
-        LAGS_TYPE = list[int]
+        FUTURE_LAGS_TYPE = tuple[int, int] | list[int] | dict[str, tuple[int, int] | list[int]]
+        LAGS_TYPE = int | list[int] | dict[str, int | list[int]]
 
         class TimeSeries: ...
 
