@@ -1,3 +1,9 @@
+## v0.3.1 (2024-04-19)
+
+### Fix
+
+- fix imports when darts is not available (#16)
+
 ## v0.3.0 (2024-04-14)
 
 ### Feat
