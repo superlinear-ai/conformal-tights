@@ -1,6 +1,6 @@
 """Test fixtures."""
 
-from typing import TypeAlias
+from typing import Literal, TypeAlias
 
 import pandas as pd
 import pytest
@@ -39,12 +39,12 @@ def dataset(request: SubRequest) -> Dataset:
 
 @pytest.fixture(
     params=[
-        pytest.param(XGBRegressor(objective="reg:absoluteerror"), id="model:XGBRegressor-L1"),
+        pytest.param("auto", id="model:auto"),
         pytest.param(XGBRegressor(objective="reg:squarederror"), id="model:XGBRegressor-L2"),
         pytest.param(LGBMRegressor(objective="regression_l1"), id="model:LGBMRegressor-L1"),
         pytest.param(LGBMRegressor(objective="regression_l2"), id="model:LGBMRegressor-L2"),
     ]
 )
-def regressor(request: SubRequest) -> BaseEstimator:
+def regressor(request: SubRequest) -> BaseEstimator | Literal["auto"]:
     """Return a scikit-learn regressor."""
     return request.param

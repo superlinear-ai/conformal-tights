@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 import numpy as np
 import numpy.typing as npt
 from sklearn.base import BaseEstimator, MetaEstimatorMixin, RegressorMixin, clone
+from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import (
     check_array,
@@ -134,15 +135,22 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         self.sample_weight_calib_l1_, self.sample_weight_calib_l2_ = (
             sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type]
         )
-        # Fit the given estimator on the training data.
-        self.estimator_ = (
-            clone(self.estimator)
-            if self.estimator != "auto"
-            else XGBRegressor(objective="reg:absoluteerror")
-        )
-        if isinstance(self.estimator_, XGBRegressor):
-            self.estimator_.set_params(enable_categorical=True, random_state=self.random_state)
-        self.estimator_.fit(X_train, y_train, sample_weight=sample_weight_train)
+        # Check if the estimator was pre-fitted.
+        try:
+            check_is_fitted(self.estimator)
+        except (NotFittedError, TypeError):
+            # Fit the given estimator on the training data.
+            self.estimator_ = (
+                clone(self.estimator)
+                if self.estimator != "auto"
+                else XGBRegressor(objective="reg:absoluteerror")
+            )
+            if isinstance(self.estimator_, XGBRegressor):
+                self.estimator_.set_params(enable_categorical=True, random_state=self.random_state)
+            self.estimator_.fit(X_train, y_train, sample_weight=sample_weight_train)
+        else:
+            # Use the pre-fitted estimator.
+            self.estimator_ = self.estimator
         # Fit a nonconformity estimator on the training data with XGBRegressor's vector quantile
         # regression. We fit a minimal number of quantiles to reduce the computational cost, but
         # also to reduce the risk of overfitting in the coherent quantile regressor that is applied
