@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]  # https://python-poetry.org/docs/pyproject/
 name = "conformal-tights"
 version = "0.3.1"
-description = "A scikit-learn meta-estimator for computing tight conformal predictions"
+description = "A Python package that adds conformal prediction of coherent quantiles and intervals to any scikit-learn regressor or Darts forecaster."
 authors = ["Laurent Sorber <laurent@radix.ai>"]
 readme = "README.md"
 repository = "https://github.com/radix-ai/conformal-tights"
@@ -28,27 +28,28 @@ darts = { version = ">=0.25.0", optional = true }
 darts = ["darts"]
 
 [tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
-commitizen = ">=3.2.1"
-coverage = { extras = ["toml"], version = ">=7.2.5" }
+commitizen = ">=3.21.3"
+coverage = { extras = ["toml"], version = ">=7.4.4" }
 lightgbm = ">=4.3.0"
-mypy = ">=1.2.0"
+mypy = ">=1.9.0"
 pandas = ">=2.2.1"
-poethepoet = ">=0.20.0"
-pre-commit = ">=3.3.1"
-pytest = ">=7.3.1"
-pytest-clarity = ">=1.0.1"
-pytest-mock = ">=3.10.0"
-pytest-xdist = ">=3.2.1"
-ruff = ">=0.2.1"
-safety = ">=2.3.4,!=2.3.5"
-shellcheck-py = ">=0.9.0"
+poethepoet = ">=0.25.0"
+pre-commit = ">=3.7.0"
+pytest = ">=8.1.1"
+pytest-mock = ">=3.14.0"
+pytest-xdist = ">=3.5.0"
+ruff = ">=0.3.5"
+safety = ">=3.1.0"
+shellcheck-py = ">=0.10.0.1"
+typeguard = ">=4.2.1"
 
 [tool.poetry.group.dev.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
-cruft = ">=2.14.0"
-ipykernel = ">=6.29.2"
+cruft = ">=2.15.0"
+ipykernel = ">=6.29.4"
+ipywidgets = ">=8.1.2"
 matplotlib = ">=3.8.3"
 nbconvert = ">=7.16.3"
-pdoc = ">=13.1.1"
+pdoc = ">=14.4.0"
 tabulate = ">=0.9.0"
 
 [tool.coverage.report]  # https://coverage.readthedocs.io/en/latest/config.html#report
