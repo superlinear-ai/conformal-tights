@@ -262,10 +262,12 @@ plt.tight_layout()
 
     ```sh
     cat << EOF >> ~/.ssh/config
+
     Host *
       AddKeysToAgent yes
       IgnoreUnknown UseKeychain
       UseKeychain yes
+      ForwardAgent yes
     EOF
     ```
 
@@ -275,12 +277,12 @@ plt.tight_layout()
 <summary>2. Install Docker</summary>
 
 1. [Install Docker Desktop](https://www.docker.com/get-started).
-    - Enable *Use Docker Compose V2* in Docker Desktop's preferences window.
     - *Linux only*:
         - Export your user's user id and group id so that [files created in the Dev Container are owned by your user](https://github.com/moby/moby/issues/3206):
 
             ```sh
             cat << EOF >> ~/.bashrc
+            
             export UID=$(id --user)
             export GID=$(id --group)
             EOF
