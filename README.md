@@ -56,23 +56,23 @@ conformal_predictor.fit(X_train, y_train)
 
 # Predict quantiles with the conformal predictor
 ŷ_test_quantiles = conformal_predictor.predict_quantiles(
-    X_test, quantiles=(0.025, 0.05, 0.1, 0.9, 0.95, 0.975)
+    X_test, quantiles=(0.025, 0.05, 0.1, 0.5, 0.9, 0.95, 0.975)
 )
 ```
 
 When the input data is a pandas DataFrame, the output is also a pandas DataFrame. For example, printing the head of `ŷ_test_quantiles` yields:
 
-|   house_id |    0.025 |     0.05 |      0.1 |      0.9 |     0.95 |    0.975 |
-|-----------:|---------:|---------:|---------:|---------:|---------:|---------:|
-|       1357 | 114784.0 | 120894.3 | 131618.0 | 175760.5 | 188052.0 | 205448.8 |
-|       2367 |  67416.6 |  80073.7 |  86754.0 | 117854.1 | 127582.6 | 142321.9 |
-|       2822 | 119422.7 | 132047.7 | 138724.6 | 178526.0 | 197246.2 | 214205.6 |
-|       2126 |  94030.6 |  99850.0 | 110891.3 | 150249.2 | 164703.0 | 182528.1 |
-|       1544 |  68996.2 |  81516.3 |  88231.6 | 121774.2 | 132425.1 | 147110.2 |
+|   house_id |    0.025 |     0.05 |      0.1 |      0.5 |      0.9 |     0.95 |    0.975 |
+|-----------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|
+|       1357 | 114743.7 | 120917.9 | 131752.6 | 156708.2 | 175907.8 | 187996.1 | 205443.4 |
+|       2367 |  67382.7 |  80191.7 |  86871.8 | 105807.1 | 118465.3 | 127581.2 | 142419.1 |
+|       2822 | 119068.0 | 131864.8 | 138541.6 | 159447.7 | 179227.2 | 197337.0 | 214134.1 |
+|       2126 |  93885.8 | 100040.7 | 111345.5 | 134292.7 | 150557.1 | 164595.8 | 182524.1 |
+|       1544 |  68959.8 |  81648.8 |  88364.1 | 108298.3 | 122329.6 | 132421.1 | 147225.6 |
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/594682d2-0431-4fa8-9126-9e1482992d26">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/2726d108-ee84-47d0-83d9-7e911b123f0c">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -84,7 +84,7 @@ import matplotlib.ticker as ticker
 %config InlineBackend.figure_format = "retina"
 plt.rc("font", family="DejaVu Sans", size=10)
 plt.figure(figsize=(8, 4.5))
-idx = ŷ_test.sample(50, random_state=42).sort_values().index
+idx = ŷ_test_quantiles[0.5].sample(50, random_state=42).sort_values().index
 x = list(range(1, len(idx) + 1))
 x_ticks = [1, *list(range(5, len(idx) + 1, 5))]
 for j in range(3):
@@ -217,15 +217,15 @@ Printing the head of the forecast quantiles time series `forecast.quantiles_df(q
 
 | Timestamp      |   Value_NE5_0.025 |   Value_NE5_0.05 |   Value_NE5_0.1 |   Value_NE5_0.25 |   Value_NE5_0.5 |   Value_NE5_0.75 |   Value_NE5_0.9 |   Value_NE5_0.95 |   Value_NE5_0.975 |
 |:---------------|------------------:|-----------------:|----------------:|-----------------:|----------------:|-----------------:|----------------:|-----------------:|------------------:|
-| 2022‑06‑01 01h |           19197.4 |          19262.5 |         19366.4 |          19612.7 |         19786.7 |          19996.5 |         20185.5 |          20293.3 |           20358.0 |
-| 2022‑06‑01 02h |           18963.2 |          19078.7 |         19263.3 |          19463.6 |         19706.0 |          19951.4 |         20125.2 |          20265.8 |           20353.4 |
-| 2022‑06‑01 03h |           19259.1 |          19372.3 |         19551.2 |          19846.4 |         20145.2 |          20401.1 |         20630.4 |          20814.0 |           20939.6 |
-| 2022‑06‑01 04h |           21537.8 |          21745.9 |         21958.0 |          22266.8 |         22600.7 |          22939.7 |         23356.0 |          23538.7 |           23691.7 |
-| 2022‑06‑01 05h |           24304.0 |          24503.6 |         24717.5 |          25029.4 |         25602.3 |          26266.4 |         26791.6 |          26963.8 |           27359.2 |
+| 2022‑06‑01 01h |           19165.2 |          19268.3 |         19435.7 |          19663.0 |         19861.7 |          20062.2 |         20237.9 |          20337.7 |           20453.2 |
+| 2022‑06‑01 02h |           19004.0 |          19099.0 |         19226.3 |          19453.7 |         19710.7 |          19966.1 |         20170.1 |          20272.8 |           20366.9 |
+| 2022‑06‑01 03h |           19372.6 |          19493.0 |         19679.4 |          20027.6 |         20324.6 |          20546.3 |         20773.2 |          20910.3 |           21014.1 |
+| 2022‑06‑01 04h |           21936.2 |          22105.6 |         22436.0 |          22917.5 |         23308.6 |          23604.8 |         23871.0 |          24121.7 |           24351.5 |
+| 2022‑06‑01 05h |           25040.5 |          25330.5 |         25531.1 |          25910.4 |         26439.4 |          26903.2 |         27287.4 |          27493.9 |           27633.9 |
 
 Let's visualize the forecast and its prediction interval on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/6886384d-979f-46ec-ba06-10f4ef8f8f6f">
+<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/8c3c256f-0732-49c7-94f2-e42213e85e4b">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
