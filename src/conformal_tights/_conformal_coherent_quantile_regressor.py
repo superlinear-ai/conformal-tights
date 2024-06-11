@@ -28,17 +28,19 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
     Adds conformally calibrated quantile and interval prediction to a given regressor by fitting a
     meta-estimator as follows:
 
-        1. The given data is split into a training set and a conformal calibration set.
-        2. The training set is used to fit the given regressor.
-        3. The training set is also used to fit a nonconformity estimator, which is by default an
+        1. All available data is used to fit the given regressor for point prediction later on.
+        2. The available data is then split into a training set and a conformal calibration set.
+        3. The training set is used to fit a base regressor that is used as the center of the
+           conformal predictions.
+        4. The training set is also used to fit a nonconformity estimator, which is by default an
            XGBoost vector quantile regressor for the quantiles (1/8, 1/4, 1/2, 3/4, 7/8). These
            quantiles are not necessarily monotonic and may cross each other.
-        4. The conformal calibration set is split into two levels.
-        5. The level 1 conformal calibration set is used to fit a Coherent Linear Quantile
+        5. The conformal calibration set is split into two levels.
+        6. The level 1 conformal calibration set is used to fit a Coherent Linear Quantile
            Regression model of the (relative) residuals given the level 1 nonconformity estimates.
            This model produces conformally calibrated quantiles of the (relative) residuals that are
            coherent in the sense that they increase monotonically.
-        6. The level 2 conformal calibration set is used to fit a per-quantile conformal bias on top
+        7. The level 2 conformal calibration set is used to fit a per-quantile conformal bias on top
            of the level 1 conformal quantile predictions of the (relative) residuals.
 
     Quantile and interval predictions are made by predicting the nonconformity estimates, converting
@@ -119,8 +121,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         sample_weight_train, sample_weight_calib = (
             sample_weights[:2] if sample_weight is not None else (None, None)
         )
-        # Split the conformal calibration set into two levels. If would be less than 128 level 2
-        # examples, use all of them for level 1 instead.
+        # Split the conformal calibration set into two levels. If there would be less than 128
+        # level 2 examples, use all of them for level 1 instead.
         X_calib_l1, X_calib_l2, y_calib_l1, y_calib_l2, *sample_weights_calib = train_test_split(
             self.X_calib_,
             self.y_calib_,
@@ -133,11 +135,11 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         self.sample_weight_calib_l1_, self.sample_weight_calib_l2_ = (
             sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type]
         )
-        # Check if the estimator was pre-fitted.
+        # Fit the wrapped estimator for point prediction.
         try:
             check_is_fitted(self.estimator)
         except (NotFittedError, TypeError):
-            # Fit the given estimator on the training data.
+            # Fit the given estimator on all available data.
             self.estimator_ = (
                 clone(self.estimator)
                 if self.estimator != "auto"
@@ -145,14 +147,30 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             )
             if isinstance(self.estimator_, XGBRegressor):
                 self.estimator_.set_params(enable_categorical=True, random_state=self.random_state)
-            self.estimator_.fit(X_train, y_train, sample_weight=sample_weight_train)
+            self.estimator_.fit(X, y, sample_weight=sample_weight)
         else:
             # Use the pre-fitted estimator.
             self.estimator_ = self.estimator
+        # Fit a base estimator on the training data (which is a subset of all available data). This
+        # estimator's predictions will be used as the center of the conformally calibrated quantiles
+        # and intervals.
+        self.base_estimator_ = (
+            clone(self.estimator) if self.nonconformity_estimator != "auto" else XGBRegressor()
+        )
+        if isinstance(self.base_estimator_, XGBRegressor):
+            self.base_estimator_.set_params(
+                objective="reg:absoluteerror",
+                enable_categorical=True,
+                random_state=self.random_state,
+            )
+        self.base_estimator_.fit(X_train, y_train, sample_weight=sample_weight_train)
         # Fit a nonconformity estimator on the training data with XGBRegressor's vector quantile
         # regression. We fit a minimal number of quantiles to reduce the computational cost, but
         # also to reduce the risk of overfitting in the coherent quantile regressor that is applied
         # on top of the nonconformity estimates.
+        self.nonconformity_quantiles_: list[float] = sorted(
+            set(self.nonconformity_quantiles) | {0.5}  # type: ignore[arg-type]
+        )
         self.nonconformity_estimator_ = (
             clone(self.nonconformity_estimator)
             if self.nonconformity_estimator != "auto"
@@ -161,18 +179,22 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         if isinstance(self.nonconformity_estimator_, XGBRegressor):
             self.nonconformity_estimator_.set_params(
                 objective="reg:quantileerror",
-                quantile_alpha=self.nonconformity_quantiles,
+                quantile_alpha=self.nonconformity_quantiles_,
                 enable_categorical=True,
                 random_state=self.random_state,
             )
         self.nonconformity_estimator_.fit(X_train, y_train, sample_weight=sample_weight_train)
         # Predict on the level 1 calibration set.
-        self.ŷ_calib_l1_ = self.estimator_.predict(X_calib_l1)
-        self.ŷ_calib_l1_nonconformity_ = self.nonconformity_estimator_.predict(X_calib_l1)
+        self.ŷ_calib_l1_ = np.asarray(self.base_estimator_.predict(X_calib_l1))
+        self.ŷ_calib_l1_nonconformity_ = np.asarray(
+            self.nonconformity_estimator_.predict(X_calib_l1)
+        )
         self.residuals_calib_l1_ = self.ŷ_calib_l1_ - y_calib_l1
         # Predict on the level 2 calibration set.
-        self.ŷ_calib_l2_ = self.estimator_.predict(X_calib_l2)
-        self.ŷ_calib_l2_nonconformity_ = self.nonconformity_estimator_.predict(X_calib_l2)
+        self.ŷ_calib_l2_ = np.asarray(self.base_estimator_.predict(X_calib_l2))
+        self.ŷ_calib_l2_nonconformity_ = np.asarray(
+            self.nonconformity_estimator_.predict(X_calib_l2)
+        )
         self.residuals_calib_l2_ = self.ŷ_calib_l2_ - y_calib_l2
         # Lazily fit level 1 conformal predictors as coherent linear quantile regression models that
         # predict quantiles of the (relative) residuals given the nonconformity estimates, and
@@ -256,8 +278,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         """Predict conformally calibrated quantiles on a given dataset."""
         # Predict the absolute and relative quantiles.
         quantiles = np.asarray(quantiles)
-        ŷ = np.asarray(self.estimator_.predict(X))
-        X_cqr = self.nonconformity_estimator_.predict(X)
+        ŷ = np.asarray(self.base_estimator_.predict(X))
+        X_cqr = np.asarray(self.nonconformity_estimator_.predict(X))
         cqr_abs, bias_abs = self._lazily_fit_conformal_predictor("Δŷ", quantiles)
         cqr_rel, bias_rel = self._lazily_fit_conformal_predictor("Δŷ/ŷ", quantiles)
         if priority == "coverage":  # Only allow quantile expansion when the priority is coverage.
