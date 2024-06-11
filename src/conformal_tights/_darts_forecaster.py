@@ -1,51 +1,20 @@
 """Darts Forecaster."""
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
+from darts import TimeSeries
+from darts.models.forecasting.regression_model import (
+    FUTURE_LAGS_TYPE,
+    LAGS_TYPE,
+    RegressionModel,
+    RegressionModelWithCategoricalCovariates,
+    _LikelihoodMixin,
+)
 from sklearn.utils import check_random_state
-
-if TYPE_CHECKING:
-    import pandas as pd
-else:
-    try:
-        import pandas as pd
-    except ImportError:
-        pd = None
-
-if TYPE_CHECKING:
-    from darts import TimeSeries
-    from darts.models.forecasting.regression_model import (
-        FUTURE_LAGS_TYPE,
-        LAGS_TYPE,
-        RegressionModel,
-        RegressionModelWithCategoricalCovariates,
-        _LikelihoodMixin,
-    )
-else:
-    try:
-        from darts import TimeSeries
-        from darts.models.forecasting.regression_model import (
-            FUTURE_LAGS_TYPE,
-            LAGS_TYPE,
-            RegressionModel,
-            RegressionModelWithCategoricalCovariates,
-            _LikelihoodMixin,
-        )
-    except ImportError:
-        FUTURE_LAGS_TYPE = tuple[int, int] | list[int] | dict[str, tuple[int, int] | list[int]]
-        LAGS_TYPE = int | list[int] | dict[str, int | list[int]]
-
-        class TimeSeries: ...
-
-        class RegressionModel: ...
-
-        class RegressionModelWithCategoricalCovariates: ...
-
-        class _LikelihoodMixin: ...
-
 
 from conformal_tights._conformal_coherent_quantile_regressor import (
     ConformalCoherentQuantileRegressor,
@@ -63,7 +32,7 @@ class _DartsAdapter:
         self.quantile = quantile
         self.quantiles = np.asarray(quantiles)
 
-    def predict(self, x: "pd.DataFrame", **kwargs: Any) -> FloatMatrix[F]:
+    def predict(self, x: pd.DataFrame, **kwargs: Any) -> FloatMatrix[F]:
         # Call ConformalCoherentQuantileRegressor's predict_quantiles.
         q = np.asarray(self.model.predict_quantiles(x, quantiles=self.quantiles))
         # Filter out the requested quantile.
@@ -92,13 +61,6 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         categorical_static_covariates: str | list[str] | None = None,
     ) -> None:
         """Initialize a Darts Conformal Coherent Quantile Regressor."""
-        # Verify that the required dependencies are installed.
-        try:
-            import darts  # noqa: F401
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            required_dependencies = "Please install darts and pandas to use DartsForecaster."
-            raise ImportError(required_dependencies) from None
         # Initialise _LikelihoodMixin.
         self.likelihood = "quantile"
         self._model_container = self._get_model_container()
@@ -138,7 +100,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         past_covariates: Sequence[TimeSeries],
         future_covariates: Sequence[TimeSeries],
         max_samples_per_ts: int,
-    ) -> tuple["pd.DataFrame", FloatVector[F]]:
+    ) -> tuple[pd.DataFrame, FloatVector[F]]:
         """Override training data to add support for categorical covariates."""
         # Validate categoricals with RegressionModelWithCategoricalCovariates. We cannot inherit
         # from RegressionModelWithCategoricalCovariates because it was developed with LightGBM in
@@ -162,7 +124,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         )
         # Convert categorical columns to pd.Categorical so that the wrapped regressor can handle
         # them appropriately.
-        self.cat_col_categories_: dict[float, "pd.Index"] = {}
+        self.cat_col_categories_: dict[float, pd.Index] = {}
         training_samples_df = pd.DataFrame(training_samples)
         cols = training_samples_df.columns
         for cat_col_index in cat_col_indices:
