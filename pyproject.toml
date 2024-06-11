@@ -19,20 +19,17 @@ version_provider = "poetry"
 [tool.poetry.dependencies]  # https://python-poetry.org/docs/dependency-specification/
 python = ">=3.10,<4.0"
 numpy = ">=1.22.0"
+pandas = ">=1.0.5"
 scikit-learn = ">=1.0.0"
 scipy = ">=1.5.0"
+u8darts = ">=0.25.0"
 xgboost = ">=2.0.0"
-darts = { version = ">=0.25.0", optional = true }
-
-[tool.poetry.extras]  # https://python-poetry.org/docs/pyproject/#extras
-darts = ["darts"]
 
 [tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
 commitizen = ">=3.21.3"
 coverage = { extras = ["toml"], version = ">=7.4.4" }
 lightgbm = ">=4.3.0"
 mypy = ">=1.9.0"
-pandas = ">=2.2.1"
 poethepoet = ">=0.25.0"
 pre-commit = ">=3.7.0"
 pytest = ">=8.1.1"

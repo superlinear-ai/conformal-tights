@@ -1,9 +1,10 @@
 """Conformal Coherent Quantile Regressor meta-estimator."""
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
+from typing import Any, Literal, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 from sklearn.base import BaseEstimator, MetaEstimatorMixin, RegressorMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
@@ -17,9 +18,6 @@ from xgboost import XGBRegressor
 
 from conformal_tights._coherent_linear_quantile_regressor import CoherentLinearQuantileRegressor
 from conformal_tights._typing import FloatMatrix, FloatVector
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 F = TypeVar("F", np.float32, np.float64)
 
@@ -88,8 +86,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
 
     def fit(
         self,
-        X: "FloatMatrix[F] | pd.DataFrame",
-        y: "FloatVector[F] | pd.Series",
+        X: FloatMatrix[F] | pd.DataFrame,
+        y: FloatVector[F] | pd.Series,
         *,
         sample_weight: "FloatVector[F] | pd.Series | None" = None,
     ) -> "ConformalCoherentQuantileRegressor":
@@ -242,19 +240,19 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
     @overload
     def predict_quantiles(
         self,
-        X: "pd.DataFrame",
+        X: pd.DataFrame,
         *,
         quantiles: npt.ArrayLike,
         priority: Literal["accuracy", "coverage"] = "accuracy",
-    ) -> "pd.DataFrame": ...
+    ) -> pd.DataFrame: ...
 
     def predict_quantiles(
         self,
-        X: "FloatMatrix[F] | pd.DataFrame",
+        X: FloatMatrix[F] | pd.DataFrame,
         *,
         quantiles: npt.ArrayLike,
         priority: Literal["accuracy", "coverage"] = "accuracy",
-    ) -> "FloatMatrix[F] | pd.DataFrame":
+    ) -> FloatMatrix[F] | pd.DataFrame:
         """Predict conformally calibrated quantiles on a given dataset."""
         # Predict the absolute and relative quantiles.
         quantiles = np.asarray(quantiles)
@@ -285,25 +283,20 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             ŷ_quantiles = ŷ_quantiles.astype(self.y_dtype_)
         # Convert ŷ_quantiles to a pandas DataFrame if X is a pandas DataFrame.
         if hasattr(X, "dtypes") and hasattr(X, "index"):
-            try:
-                import pandas as pd
-            except ImportError:
-                pass
-            else:
-                ŷ_quantiles_df = pd.DataFrame(ŷ_quantiles, index=X.index, columns=quantiles)
-                ŷ_quantiles_df.columns.name = "quantile"
-                return ŷ_quantiles_df
+            ŷ_quantiles_df = pd.DataFrame(ŷ_quantiles, index=X.index, columns=quantiles)
+            ŷ_quantiles_df.columns.name = "quantile"
+            return ŷ_quantiles_df
         return ŷ_quantiles
 
     @overload
     def predict_interval(self, X: FloatMatrix[F], *, coverage: float = 0.95) -> FloatMatrix[F]: ...
 
     @overload
-    def predict_interval(self, X: "pd.DataFrame", *, coverage: float = 0.95) -> "pd.DataFrame": ...
+    def predict_interval(self, X: pd.DataFrame, *, coverage: float = 0.95) -> pd.DataFrame: ...
 
     def predict_interval(
-        self, X: "FloatMatrix[F] | pd.DataFrame", *, coverage: float = 0.95
-    ) -> "FloatMatrix[F] | pd.DataFrame":
+        self, X: FloatMatrix[F] | pd.DataFrame, *, coverage: float = 0.95
+    ) -> FloatMatrix[F] | pd.DataFrame:
         """Predict conformally calibrated intervals on a given dataset."""
         # Convert the coverage probability to lower and upper quantiles.
         lb = (1 - coverage) / 2
@@ -329,26 +322,26 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
 
     @overload
     def predict(
-        self, X: "pd.DataFrame", *, coverage: None = None, quantiles: None = None
-    ) -> "pd.Series": ...
+        self, X: pd.DataFrame, *, coverage: None = None, quantiles: None = None
+    ) -> pd.Series: ...
 
     @overload
     def predict(
-        self, X: "pd.DataFrame", *, coverage: float, quantiles: None = None
-    ) -> "pd.DataFrame": ...
+        self, X: pd.DataFrame, *, coverage: float, quantiles: None = None
+    ) -> pd.DataFrame: ...
 
     @overload
     def predict(
-        self, X: "pd.DataFrame", *, coverage: None = None, quantiles: npt.ArrayLike
-    ) -> "pd.DataFrame": ...
+        self, X: pd.DataFrame, *, coverage: None = None, quantiles: npt.ArrayLike
+    ) -> pd.DataFrame: ...
 
     def predict(
         self,
-        X: "FloatMatrix[F] | pd.DataFrame",
+        X: FloatMatrix[F] | pd.DataFrame,
         *,
         coverage: float | None = None,
         quantiles: npt.ArrayLike | None = None,
-    ) -> "FloatVector[F] | pd.Series | FloatMatrix[F] | pd.DataFrame":
+    ) -> FloatVector[F] | pd.Series | FloatMatrix[F] | pd.DataFrame:
         """Predict on a given dataset."""
         assert coverage is None or quantiles is None
         check_is_fitted(self)
@@ -363,13 +356,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         if not np.issubdtype(self.y_dtype_, np.integer):
             ŷ = ŷ.astype(self.y_dtype_)
         if hasattr(X, "dtypes") and hasattr(X, "index"):
-            try:
-                import pandas as pd
-            except ImportError:
-                pass
-            else:
-                ŷ_series = pd.Series(ŷ, index=X.index)
-                return ŷ_series
+            ŷ_series = pd.Series(ŷ, index=X.index)
+            return ŷ_series
         return ŷ
 
     def _more_tags(self) -> dict[str, Any]:
