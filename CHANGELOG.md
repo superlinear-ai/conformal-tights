@@ -1,3 +1,11 @@
+## v0.4.0 (2024-06-11)
+
+### Feat
+
+- improve sample efficiency (#28)
+- simplify installation (#26)
+- support pre-fitted estimators (#19)
+
 ## v0.3.1 (2024-04-19)
 
 ### Fix

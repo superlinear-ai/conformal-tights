@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]  # https://python-poetry.org/docs/pyproject/
 name = "conformal-tights"
-version = "0.3.1"
+version = "0.4.0"
 description = "A Python package that adds conformal prediction of coherent quantiles and intervals to any scikit-learn regressor or Darts forecaster."
 authors = ["Laurent Sorber <laurent@radix.ai>"]
 readme = "README.md"
