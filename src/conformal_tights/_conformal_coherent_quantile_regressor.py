@@ -53,7 +53,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
     quantiles to predict, and to select the quantile predictions with the lowest dispersion.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         estimator: BaseEstimator | Literal["auto"] = "auto",
         *,
