@@ -1,15 +1,15 @@
 {
-  "template": "https://github.com/radix-ai/poetry-cookiecutter",
-  "commit": "08c7fcd740fc0807e7de1810950c40fc4ac93013",
+  "template": "https://github.com/superlinear-ai/poetry-cookiecutter",
+  "commit": "4ee45cc9ba5a0ef51d48b8c637ae066305dc6a06",
   "checkout": null,
   "context": {
     "cookiecutter": {
       "project_type": "package",
       "project_name": "Conformal Tights",
       "project_description": "A Python package that adds conformal prediction of coherent quantiles and intervals to any scikit-learn regressor or Darts forecaster.",
-      "project_url": "https://github.com/radix-ai/conformal-tights",
+      "project_url": "https://github.com/superlinear-ai/conformal-tights",
       "author_name": "Laurent Sorber",
-      "author_email": "laurent@radix.ai",
+      "author_email": "laurent@superlinear.ai",
       "python_version": "3.10",
       "development_environment": "strict",
       "with_conventional_commits": "1",
@@ -22,7 +22,7 @@
       "__docstring_style": "NumPy",
       "__project_name_kebab_case": "conformal-tights",
       "__project_name_snake_case": "conformal_tights",
-      "_template": "https://github.com/radix-ai/poetry-cookiecutter"
+      "_template": "https://github.com/superlinear-ai/poetry-cookiecutter"
     }
   },
   "directory": null
