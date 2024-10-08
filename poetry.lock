@@ -543,16 +543,17 @@ rich = "*"
 
 [[package]]
 name = "coreforecast"
-version = "0.0.9"
+version = "0.0.12"
 description = "Fast implementations of common forecasting routines"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "coreforecast-0.0.9-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:fbbd93fd2f6325bf1800dfe220b607fbf7fec737f1acb6dfec1c2a64aab36b45"},
-    {file = "coreforecast-0.0.9-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a5b51b61f4d386c7a39f859596450d12d0e38f8dbd416fa5c9fb0cebe15434ab"},
-    {file = "coreforecast-0.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:103d3edbdffc1131700dc0a107718a2291f75fc890a85c7ba1941a6d252c45e7"},
-    {file = "coreforecast-0.0.9-py3-none-win_amd64.whl", hash = "sha256:cf06b49664687f70d71ef39ab7376256365ca7828d3ab88eefc6fa058cf290e5"},
-    {file = "coreforecast-0.0.9.tar.gz", hash = "sha256:6926060bba0f624890da9db01ecb770f8d3a12afb0df4b7ed20b72811d2fe2e5"},
+    {file = "coreforecast-0.0.12-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:51a13bb737e06276b79a6e70016b9361b69859cc7020ea779116ba6bcd72c2d5"},
+    {file = "coreforecast-0.0.12-py3-none-macosx_11_0_arm64.whl", hash = "sha256:761a73c0c15df7008852f55cae6f0001e069447ee28b7d1f1fe14825497a91d1"},
+    {file = "coreforecast-0.0.12-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:25eb7670c4b29324c8ddc52454038ade843ced8882009b11085ed5dca7bbf0f9"},
+    {file = "coreforecast-0.0.12-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:befcf2991a0f605c110462ea38ec8d115799f44d26e733cd2baa590f0aaea889"},
+    {file = "coreforecast-0.0.12-py3-none-win_amd64.whl", hash = "sha256:1e50d085cd40d4aeec957edbc50b230ae6df5985b946c9f2ad02f6cc2cb79a9c"},
+    {file = "coreforecast-0.0.12.tar.gz", hash = "sha256:52af687933d0d6a61a8fabdc656b3fc2b62ac55cd44739e5ebb456afdd759bd3"},
 ]
 
 [package.dependencies]
@@ -3576,34 +3577,59 @@ tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
 name = "statsforecast"
-version = "1.7.5"
+version = "1.7.8"
 description = "Time series forecasting suite using statistical models"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "statsforecast-1.7.5-py3-none-any.whl", hash = "sha256:35512bb6ac3c9413f010d959d5baf08f431dfc065e9e19995b1d55a22649ba68"},
-    {file = "statsforecast-1.7.5.tar.gz", hash = "sha256:18ad1e68ea8096e9ae59ca39079b8c3c5f8977025a1c67bea67a695a37a077ca"},
+    {file = "statsforecast-1.7.8-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:79e5683a43265edd55d71b31bc602b29e8e38e61d0c9ef4b9000056ab6b8534e"},
+    {file = "statsforecast-1.7.8-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:a205baeac2db8afae70a67498c9ec89762525d88c741e323af5a539e4260cc61"},
+    {file = "statsforecast-1.7.8-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:12f1bea7e1a23ca425476dfcf17dc56a44462ce0284f8c6f82c65b49c5c23b0b"},
+    {file = "statsforecast-1.7.8-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:892413f04f48c6036ebefb759cf676b0cf98ce6079c3f1a55795eba3a06d20b2"},
+    {file = "statsforecast-1.7.8-cp310-cp310-win_amd64.whl", hash = "sha256:e020832403530e5be74f44738d792c043faecc2718e71cc6cf1372f361210f64"},
+    {file = "statsforecast-1.7.8-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:737c99fff0e881fb1713e7f38e5d3b523a6451650564706eef91ce647d5a8d74"},
+    {file = "statsforecast-1.7.8-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:725ebea30e9098c812dfbc85dc31a5b459d46d3b81e68212899894770f27648a"},
+    {file = "statsforecast-1.7.8-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:aa02344b08e71497ddc562b023ab627b3703f035fd703dad3e5a0f6e94cb8c7f"},
+    {file = "statsforecast-1.7.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:84bc52363d66ece211e6d196eb764fceb097384a192031be866bea02f7e62c4d"},
+    {file = "statsforecast-1.7.8-cp311-cp311-win_amd64.whl", hash = "sha256:da74148ab2e398ad4310c12fa34517477ad20fc49b935f63c330da2e94380c9f"},
+    {file = "statsforecast-1.7.8-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:33eace24080e559ac410fbed361cabfe688cb2f9b9a2e2f20aca19dcbc20be0d"},
+    {file = "statsforecast-1.7.8-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a598bedc662ae892d5ab050352746805a731a8aec511a6771cf03b1f4d76e3f2"},
+    {file = "statsforecast-1.7.8-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6eda1b19e9230925766d2f247ab64d873af09ba0db56d8ddf2705aa78e4d59b1"},
+    {file = "statsforecast-1.7.8-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c949af0b8b299bd1cf541de9b718c9f4ad627cd858fbda0a14bc4fd5d390241e"},
+    {file = "statsforecast-1.7.8-cp312-cp312-win_amd64.whl", hash = "sha256:1815e702096e5da75add79c81b3cc867954f3a957c921836035a78065f8e720e"},
+    {file = "statsforecast-1.7.8-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:656f9bbd328557aec776c8ce90f1a0c7601b4ca391454eae348c24ae88f7a1d5"},
+    {file = "statsforecast-1.7.8-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:785c08a87bacbb4613b8e5d8273f6b31e2e8f3752f651bd695219d43656b6738"},
+    {file = "statsforecast-1.7.8-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6fa9babfd8fb046912d2dde747f79f1957c20b717fc65a9f91c9994d8db6a737"},
+    {file = "statsforecast-1.7.8-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d24b2a1f8e88bbeda3905bae7adc9ccffce40bbf10b64bd1121600fed958b9fa"},
+    {file = "statsforecast-1.7.8-cp38-cp38-win_amd64.whl", hash = "sha256:be8383b621bd5805ae003bfacded6c9eb3bb156d6948c27077cedd58314b862f"},
+    {file = "statsforecast-1.7.8-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:34351e94006ad83fac45a78667731923b131bed5149b9f96c6bf249117b7612e"},
+    {file = "statsforecast-1.7.8-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:b51895e1dd88ab8abe0c43135822e4f5eafd0a903387407c21eda9e610cf00af"},
+    {file = "statsforecast-1.7.8-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:77f4d9d32c5c4df65720a71721af405f4d348f341ade89d1cabbdc7f02af73a9"},
+    {file = "statsforecast-1.7.8-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:90df1972fcc6fe945a0e80398174f9a88fefc3ef1980e24a045e7029e9cf1eb2"},
+    {file = "statsforecast-1.7.8-cp39-cp39-win_amd64.whl", hash = "sha256:1a4f6364e3542109a46efc4c67f28a2172e0b3805b4001595207a0f8fa08c715"},
+    {file = "statsforecast-1.7.8.tar.gz", hash = "sha256:44a89372e1761bba90ded17ccd6fd3504012d219e8ceb4c453d78be910e92287"},
 ]
 
 [package.dependencies]
 cloudpickle = "*"
-coreforecast = ">=0.0.9"
+coreforecast = ">=0.0.12"
 fugue = ">=0.8.1"
 numba = ">=0.55.0"
 numpy = ">=1.21.6"
 pandas = ">=1.3.5"
 scipy = ">=1.7.3"
 statsmodels = ">=0.13.2"
-threadpoolctl = "*"
+threadpoolctl = ">=3"
 tqdm = "*"
 utilsforecast = ">=0.1.4"
 
 [package.extras]
+all = ["black", "datasetsforecast", "fire", "fugue[dask] (>=0.8.1)", "fugue[ray] (>=0.8.1)", "fugue[spark] (>=0.8.1)", "nbdev", "nbdev-plotly", "nbformat", "numpy (<2)", "pandas (<2.2)", "pandas[plot]", "plotly", "plotly-resampler", "pmdarima", "polars[numpy]", "pre-commit", "prophet", "protobuf (>=3.15.3,<4.0.0)", "pyarrow", "pybind11", "pytest", "ray (<2.8)", "scikit-learn", "setuptools (<70)", "supersmoother"]
 dask = ["fugue[dask] (>=0.8.1)"]
-dev = ["black", "datasetsforecast", "fugue[dask] (>=0.8.1)", "fugue[ray] (>=0.8.1)", "fugue[spark] (>=0.8.1)", "mypy", "nbdev", "nbdev-plotly", "pandas[plot]", "plotly", "plotly-resampler", "pmdarima", "polars", "pre-commit", "prophet", "protobuf (>=3.15.3,<4.0.0)", "pyarrow", "ray (<2.8)", "ruff", "scikit-learn", "setuptools (<70)", "supersmoother"]
+dev = ["black", "datasetsforecast", "fire", "nbdev", "nbdev-plotly", "nbformat", "pandas[plot]", "pmdarima", "polars[numpy]", "pre-commit", "prophet", "pyarrow", "pybind11", "pytest", "scikit-learn", "setuptools (<70)", "supersmoother"]
 plotly = ["plotly", "plotly-resampler"]
-polars = ["polars"]
-ray = ["fugue[ray] (>=0.8.1)", "protobuf (>=3.15.3,<4.0.0)", "ray (<2.8)"]
+polars = ["polars[numpy]"]
+ray = ["fugue[ray] (>=0.8.1)", "numpy (<2)", "pandas (<2.2)", "protobuf (>=3.15.3,<4.0.0)", "ray (<2.8)"]
 spark = ["fugue[spark] (>=0.8.1)"]
 
 [[package]]
