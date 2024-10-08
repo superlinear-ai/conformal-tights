@@ -1,4 +1,4 @@
-[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/radix-ai/conformal-tights) [![Open in GitHub Codespaces](https://img.shields.io/static/v1?label=GitHub%20Codespaces&message=Open&color=blue&logo=github)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=765698489&skip_quickstart=true)
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/superlinear-ai/conformal-tights) [![Open in GitHub Codespaces](https://img.shields.io/static/v1?label=GitHub%20Codespaces&message=Open&color=blue&logo=github)](https://github.com/codespaces/new/superlinear-ai/conformal-tights)
 
 # 👖 Conformal Tights
 
@@ -72,7 +72,7 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/2726d108-ee84-47d0-83d9-7e911b123f0c">
+<img src="https://github.com/superlinear-ai/conformal-tights/assets/4543654/2726d108-ee84-47d0-83d9-7e911b123f0c">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -225,7 +225,7 @@ Printing the head of the forecast quantiles time series `forecast.quantiles_df(q
 
 Let's visualize the forecast and its prediction interval on the test set:
 
-<img src="https://github.com/radix-ai/conformal-tights/assets/4543654/8c3c256f-0732-49c7-94f2-e42213e85e4b">
+<img src="https://github.com/superlinear-ai/conformal-tights/assets/4543654/8c3c256f-0732-49c7-94f2-e42213e85e4b">
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -306,7 +306,7 @@ plt.tight_layout()
 The following development environments are supported:
 
 1. ⭐️ *GitHub Codespaces*: click on *Code* and select *Create codespace* to start a Dev Container with [GitHub Codespaces](https://github.com/features/codespaces).
-1. ⭐️ *Dev Container (with container volume)*: click on [Open in Dev Containers](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/radix-ai/conformal-tights) to clone this repository in a container volume and create a Dev Container with VS Code.
+1. ⭐️ *Dev Container (with container volume)*: click on [Open in Dev Containers](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/superlinear-ai/conformal-tights) to clone this repository in a container volume and create a Dev Container with VS Code.
 1. *Dev Container*: clone this repository, open it with VS Code, and run <kbd>Ctrl/⌘</kbd> + <kbd>⇧</kbd> + <kbd>P</kbd> → *Dev Containers: Reopen in Container*.
 1. *PyCharm*: clone this repository, open it with PyCharm, and [configure Docker Compose as a remote interpreter](https://www.jetbrains.com/help/pycharm/using-docker-compose-as-a-remote-interpreter.html#docker-compose-remote) with the `dev` service.
 1. *Terminal*: clone this repository, open it with your terminal, and run `docker compose up --detach dev` to start a Dev Container in the background, and then run `docker compose exec dev zsh` to open a shell prompt in the Dev Container.
