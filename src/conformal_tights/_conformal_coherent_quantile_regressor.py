@@ -133,7 +133,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             random_state=self.random_state,
         )
         self.sample_weight_calib_l1_, self.sample_weight_calib_l2_ = (
-            sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type]
+            sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type,var-annotated]
         )
         # Fit the wrapped estimator for point prediction.
         try:
