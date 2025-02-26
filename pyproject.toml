@@ -45,6 +45,7 @@ dev = [
 
 [tool.commitizen]  # https://commitizen-tools.github.io/commitizen/config/
 bump_message = "bump: v$current_version → v$new_version"
+pre_bump_hooks = ["uv lock --offline --upgrade-package conformal-tights"]
 tag_format = "v$version"
 update_changelog_on_bump = true
 version_provider = "pep621"
