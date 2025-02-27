@@ -8,12 +8,7 @@ from scipy import sparse
 from scipy.optimize import linprog
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import (
-    check_array,
-    check_consistent_length,
-    check_is_fitted,
-    check_X_y,
-)
+from sklearn.utils.validation import check_consistent_length, check_is_fitted, validate_data
 
 from conformal_tights._typing import FloatMatrix, FloatVector
 
@@ -214,7 +209,7 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
     ) -> "CoherentLinearQuantileRegressor":
         """Fit this predictor."""
         # Validate input.
-        X, y = check_X_y(X, y, y_numeric=True)
+        X, y = validate_data(self, X, y, y_numeric=True)
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = (  # Used to cast predictions to the correct dtype.
             X.dtype if np.issubdtype(y.dtype, np.integer) else y.dtype
@@ -239,8 +234,8 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
     def predict(self, X: FloatMatrix[F]) -> FloatMatrix[F]:
         """Predict the output on a given dataset."""
         # Check input.
+        X = validate_data(self, X, reset=False, dtype=np.float64)
         check_is_fitted(self)
-        X = check_array(X, dtype=np.float64)
         # Add a constant column to X to allow for a bias in the regression.
         if self.fit_intercept:
             X = np.hstack([X, np.ones((X.shape[0], 1), dtype=X.dtype)])
@@ -255,7 +250,7 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
     def intercept_clip(self, X: FloatMatrix[F], y: FloatVector[F]) -> FloatMatrix[F]:
         """Compute a clip for a delta on the intercept that retains quantile coherence."""
         check_is_fitted(self)
-        X, y = check_X_y(X, y, y_numeric=True)
+        X, y = validate_data(self, X, y, y_numeric=True)
         X, y = X.astype(np.float64), y.astype(np.float64)
         if self.fit_intercept:
             X = np.hstack([X, np.ones((X.shape[0], 1), dtype=X.dtype)])
