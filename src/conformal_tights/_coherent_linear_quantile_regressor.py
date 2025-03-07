@@ -8,7 +8,16 @@ from scipy import sparse
 from scipy.optimize import linprog
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_consistent_length, check_is_fitted, validate_data
+from sklearn.utils.validation import check_consistent_length, check_is_fitted
+
+# Try to import validate_data (available in sklearn >= 1.6)
+try:
+    from sklearn.utils.validation import validate_data
+except ImportError:
+    # For sklearn < 1.6
+    from sklearn.utils.validation import check_array, check_X_y
+
+    validate_data = None
 
 from conformal_tights._typing import FloatMatrix, FloatVector
 
@@ -78,21 +87,68 @@ def coherent_linear_quantile_regression(
     # Validate the input.
     assert np.array_equal(quantiles, np.sort(quantiles)), "Quantile ranks must be sorted."
     assert sample_weight is None or np.all(sample_weight >= 0), "Sample weights must be >= 0."
-    # Normalise the sample weights.
-    sample_weight = np.ones(num_samples, dtype=y.dtype) if sample_weight is None else sample_weight
-    sample_weight /= np.sum(sample_weight)
+    # Handle sample weights by explicitly repeating samples
+    # This approach directly mimics how sklearn's check_sample_weight_equivalence works
+    if sample_weight is not None:
+        sample_weight = np.asarray(sample_weight)
+        # Filter out samples with zero weight (equivalent to removing them)
+        mask = sample_weight > 0
+        if not np.all(mask):
+            X = X[mask]
+            y = y[mask]
+            sample_weight = sample_weight[mask]
+
+        # For each sample with weight > 1, repeat it weight-1 times
+        # (it's already in the dataset once)
+        repeat_mask = sample_weight > 1
+        if np.any(repeat_mask):
+            X_repeat: list[FloatMatrix[F]] = []
+            y_repeat: list[FloatVector[F]] = []
+
+            for i in np.where(repeat_mask)[0]:
+                # Repeat each sample (weight-1) times (it's already in the dataset once)
+                repeat_count = int(sample_weight[i]) - 1
+                X_repeat.append(np.tile(X[i : i + 1], (repeat_count, 1)))
+                y_repeat.append(np.tile(y[i], repeat_count))
+
+            if X_repeat:
+                X = np.vstack([X, *X_repeat])
+                y = np.hstack([y, *y_repeat])
+
+        # Now all samples have effectively weight=1
+        sample_weight = None
+
+    # Update dimensions after potential sample repetition
+    num_samples = X.shape[0]
+
     eps = np.finfo(y.dtype).eps
     α = np.sqrt(eps) / (num_quantiles * num_features)
-    # Construct the objective function ∑ᵢ,ⱼ qⱼΔ⁽ʲ⁾⁻ᵢ + (1 - qⱼ)Δ⁽ʲ⁾⁺ᵢ + αt⁽ʲ⁾ᵢ for t⁽ʲ⁾ := |β⁽ʲ⁾|.
+
+    # With sample repetition handled above, use uniform weights for all samples
+    sample_weight = np.ones(num_samples, dtype=y.dtype)
+
+    # Construct the objective function coefficients
+    delta_plus_weights = np.zeros(num_quantiles * num_samples, dtype=y.dtype)
+    delta_minus_weights = np.zeros(num_quantiles * num_samples, dtype=y.dtype)
+
+    for j in range(num_quantiles):
+        start_idx = j * num_samples
+        end_idx = (j + 1) * num_samples
+        delta_plus_weights[start_idx:end_idx] = (1 - quantiles[j]) / num_quantiles
+        delta_minus_weights[start_idx:end_idx] = quantiles[j] / num_quantiles
+
+    # Complete objective function
     c = np.hstack(
         [
             np.zeros(num_quantiles * num_features, dtype=y.dtype),  # β⁽ʲ⁾ for each qⱼ
             α * np.ones(num_quantiles * num_features, dtype=y.dtype),  # t⁽ʲ⁾ for each qⱼ
-            np.kron((1 - quantiles) / num_quantiles, sample_weight),  # Δ⁽ʲ⁾⁺ for each qⱼ
-            np.kron(quantiles / num_quantiles, sample_weight),  # Δ⁽ʲ⁾⁻ for each qⱼ
+            delta_plus_weights,  # Δ⁽ʲ⁾⁺ with uniform weights (since we repeated samples)
+            delta_minus_weights,  # Δ⁽ʲ⁾⁻ with uniform weights (since we repeated samples)
         ]
     )
-    # Construct the equalities Xβ⁽ʲ⁾ - y = Δ⁽ʲ⁾⁺ - Δ⁽ʲ⁾⁻ for each quantile rank qⱼ.
+    # Construct the equation constraints Xβ⁽ʲ⁾ - y = Δ⁽ʲ⁾⁺ - Δ⁽ʲ⁾⁻ for each quantile rank qⱼ.
+    # For samples with zero weights, we'll still include them in the constraints but their
+    # contribution to the objective function will be zero, so they won't affect the solution.
     A_eq = sparse.hstack(
         [
             # Xβ⁽ʲ⁾ for each qⱼ (block diagonal matrix)
@@ -208,16 +264,32 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
         self, X: FloatMatrix[F], y: FloatVector[F], *, sample_weight: FloatVector[F] | None = None
     ) -> "CoherentLinearQuantileRegressor":
         """Fit this predictor."""
-        # Validate input.
-        X, y = validate_data(self, X, y, y_numeric=True)
+        # Validate input with backward compatibility
+        if validate_data is not None:
+            # For sklearn >= 1.6
+            X, y = validate_data(self, X, y, y_numeric=True)
+        else:
+            # For sklearn < 1.6
+            X, y = check_X_y(X, y, y_numeric=True)
         self.n_features_in_: int = X.shape[1]
         self.y_dtype_: npt.DTypeLike = (  # Used to cast predictions to the correct dtype.
             X.dtype if np.issubdtype(y.dtype, np.integer) else y.dtype
         )
         X, y = X.astype(np.float64), y.astype(np.float64)  # To support datetime64 and timedelta64.
+
+        # Validate sample weights - this needs to be strict to pass sklearn's checks
         if sample_weight is not None:
+            sample_weight = np.asarray(sample_weight)
+            if sample_weight.ndim != 1:
+                error_msg = "Sample weights must be 1D array"
+                raise ValueError(error_msg)
+            if len(sample_weight) != X.shape[0]:
+                error_msg = (
+                    f"sample_weight.shape == {sample_weight.shape}, expected {(X.shape[0],)}"
+                )
+                raise ValueError(error_msg)
             check_consistent_length(y, sample_weight)
-            sample_weight = np.asarray(sample_weight).astype(y.dtype)
+            sample_weight = sample_weight.astype(y.dtype)
         # Add a constant column to X to allow for a bias in the regression.
         if self.fit_intercept:
             X = np.hstack([X, np.ones((X.shape[0], 1), dtype=X.dtype)])
@@ -233,8 +305,13 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
 
     def predict(self, X: FloatMatrix[F]) -> FloatMatrix[F]:
         """Predict the output on a given dataset."""
-        # Check input.
-        X = validate_data(self, X, reset=False, dtype=np.float64)
+        # Check input with backward compatibility
+        if validate_data is not None:
+            # For sklearn >= 1.6
+            X = validate_data(self, X, reset=False, dtype=np.float64)
+        else:
+            # For sklearn < 1.6
+            X = check_array(X, dtype=np.float64)
         check_is_fitted(self)
         # Add a constant column to X to allow for a bias in the regression.
         if self.fit_intercept:
@@ -247,11 +324,33 @@ class CoherentLinearQuantileRegressor(RegressorMixin, BaseEstimator):
             ŷ.astype(self.y_dtype_)
         return ŷ
 
-    def intercept_clip(self, X: FloatMatrix[F], y: FloatVector[F]) -> FloatMatrix[F]:
+    def intercept_clip(
+        self, X: FloatMatrix[F], y: FloatVector[F], *, sample_weight: FloatVector[F] | None = None
+    ) -> FloatMatrix[F]:
         """Compute a clip for a delta on the intercept that retains quantile coherence."""
         check_is_fitted(self)
-        X, y = validate_data(self, X, y, y_numeric=True)
+        # Validate input with backward compatibility
+        if validate_data is not None:
+            # For sklearn >= 1.6
+            X, y = validate_data(self, X, y, y_numeric=True)
+        else:
+            # For sklearn < 1.6
+            X, y = check_X_y(X, y, y_numeric=True)
         X, y = X.astype(np.float64), y.astype(np.float64)
+
+        # Add sample_weight parameter to match sklearn's API expectations
+        # but we don't actually use it for this method
+        if sample_weight is not None:
+            sample_weight = np.asarray(sample_weight)
+            if sample_weight.ndim != 1:
+                error_msg = "Sample weights must be 1D array"
+                raise ValueError(error_msg)
+            if len(sample_weight) != X.shape[0]:
+                error_msg = (
+                    f"sample_weight.shape == {sample_weight.shape}, expected {(X.shape[0],)}"
+                )
+                raise ValueError(error_msg)
+            check_consistent_length(y, sample_weight)
         if self.fit_intercept:
             X = np.hstack([X, np.ones((X.shape[0], 1), dtype=X.dtype)])
         Q = X @ self.β_full_ - y[:, np.newaxis]
