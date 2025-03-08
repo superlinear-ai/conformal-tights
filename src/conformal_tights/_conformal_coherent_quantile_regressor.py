@@ -11,6 +11,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_consistent_length, check_is_fitted
 from xgboost import XGBRegressor
 
+try:
+    from sklearn.utils import Tags
+except ImportError:
+    Tags = Any
+
 from conformal_tights._coherent_linear_quantile_regressor import CoherentLinearQuantileRegressor
 from conformal_tights._typing import FloatMatrix, FloatVector
 from conformal_tights._validate_data import validate_data
@@ -377,6 +382,13 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             ŷ_series = pd.Series(ŷ, index=X.index)
             return ŷ_series
         return ŷ
+
+    def __sklearn_tags__(self) -> Tags:
+        """Return this estimator's tags."""
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.input_tags.categorical = True
+        return tags
 
     def _more_tags(self) -> dict[str, Any]:
         """Return more tags for the estimator."""
