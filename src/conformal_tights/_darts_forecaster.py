@@ -100,7 +100,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
 
     def _create_lagged_data(
         self,
-        target_series: Sequence[TimeSeries],
+        series: Sequence[TimeSeries],
         past_covariates: Sequence[TimeSeries],
         future_covariates: Sequence[TimeSeries],
         max_samples_per_ts: int,
@@ -111,20 +111,20 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         # mind and does not support other regressors like XGBRegressor.
         RegressionModelWithCategoricalCovariates._validate_categorical_covariates(  # noqa: SLF001
             self,
-            target_series,
+            series,
             past_covariates,
             future_covariates,
         )
         # Identify which columns in the lagged data are categorical.
         cat_col_indices, _ = RegressionModelWithCategoricalCovariates._get_categorical_features(  # noqa: SLF001
             self,
-            target_series,
+            series,
             past_covariates,
             future_covariates,
         )
         # Create lagged training data.
         training_samples, training_labels = super()._create_lagged_data(
-            target_series, past_covariates, future_covariates, max_samples_per_ts
+            series, past_covariates, future_covariates, max_samples_per_ts
         )
         # Convert categorical columns to pd.Categorical so that the wrapped regressor can handle
         # them appropriately.
