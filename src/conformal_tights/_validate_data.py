@@ -53,6 +53,6 @@ def validate_data(
         check_params["estimator"] = estimator  # Include estimator name in warnings.
         if "ensure_all_finite" in check_params:
             check_params["force_all_finite"] = check_params.pop("ensure_all_finite")
-        if y == "no_validation":
+        if isinstance(y, str) and y == "no_validation":
             return sk_check_array(X, **check_params)  # type: ignore[no-any-return]
         return sk_check_X_y(X, y, **check_params)  # type: ignore[no-any-return]
