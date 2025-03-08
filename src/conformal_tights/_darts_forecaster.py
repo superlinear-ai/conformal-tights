@@ -62,7 +62,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
     ) -> None:
         """Initialize a Darts Conformal Coherent Quantile Regressor."""
         # Initialise _LikelihoodMixin.
-        self.likelihood = "quantile"
+        self._likelihood = "quantile"
         self._model_container = self._get_model_container()
         self._rng = check_random_state(model.random_state)  # Generator for sampling.
         # Initialise darts.models.RegressionModel.
@@ -93,6 +93,10 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
             if isinstance(categorical_static_covariates, str)
             else categorical_static_covariates
         )
+
+    @property
+    def likelihood(self) -> str | None:
+        return getattr(self, "_likelihood", None)
 
     def _create_lagged_data(
         self,
