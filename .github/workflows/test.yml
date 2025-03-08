@@ -34,7 +34,10 @@ jobs:
       - name: Start Dev Container
         run: |
           git config --global init.defaultBranch main
-          PYTHON_VERSION=${{ matrix.python-version }} RESOLUTION_STRATEGY=${{ matrix.resolution-strategy }} devcontainer up --workspace-folder .
+          devcontainer up --workspace-folder .
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          RESOLUTION_STRATEGY: ${{ matrix.resolution-strategy }}
 
       - name: Lint package
         run: devcontainer exec --workspace-folder . poe lint

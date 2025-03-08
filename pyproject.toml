@@ -46,10 +46,9 @@ dev = [
 
 [tool.commitizen]  # https://commitizen-tools.github.io/commitizen/config/
 bump_message = "bump: v$current_version → v$new_version"
-pre_bump_hooks = ["uv lock --offline --upgrade-package conformal-tights"]
 tag_format = "v$version"
 update_changelog_on_bump = true
-version_provider = "pep621"
+version_provider = "uv"
 
 [tool.coverage.report]  # https://coverage.readthedocs.io/en/latest/config.html#report
 fail_under = 50
@@ -110,7 +109,10 @@ convention = "numpy"
 [tool.uv]  # https://docs.astral.sh/uv/reference/settings/
 package = true
 
-[tool.poe.tasks]  # https://github.com/nat-n/poethepoet
+[tool.poe.executor]  # https://github.com/nat-n/poethepoet
+type = "simple"
+
+[tool.poe.tasks]
 
   [tool.poe.tasks.readme]
   help = "Generate this package's README"
