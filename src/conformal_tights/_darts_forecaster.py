@@ -103,7 +103,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         series: Sequence[TimeSeries],
         past_covariates: Sequence[TimeSeries],
         future_covariates: Sequence[TimeSeries],
-        max_samples_per_ts: int,
+        **kwargs: Any,
     ) -> tuple[pd.DataFrame, FloatVector[F]]:
         """Override training data to add support for categorical covariates."""
         # Validate categoricals with RegressionModelWithCategoricalCovariates. We cannot inherit
@@ -124,7 +124,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         )
         # Create lagged training data.
         training_samples, training_labels = super()._create_lagged_data(
-            series, past_covariates, future_covariates, max_samples_per_ts
+            series, past_covariates, future_covariates, **kwargs
         )
         # Convert categorical columns to pd.Categorical so that the wrapped regressor can handle
         # them appropriately.
