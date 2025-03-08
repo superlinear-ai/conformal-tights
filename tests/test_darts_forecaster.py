@@ -12,7 +12,9 @@ from conformal_tights import ConformalCoherentQuantileRegressor, DartsForecaster
 def test_darts_forecaster_coverage(regressor: BaseEstimator) -> None:
     """Test DartsForecaster's coverage."""
     # Fetch the dataset.
-    X, y = fetch_openml(name="Bike_Sharing_Demand", version=7, return_X_y=True, as_frame=True)
+    X, y = fetch_openml(
+        name="Bike_Sharing_Demand", version=7, return_X_y=True, as_frame=True, parser="auto"
+    )
     # Convert the dataset to a Darts.Timeseries.
     target_series = TimeSeries.from_series(y)
     covariates_series = TimeSeries.from_dataframe(X)
