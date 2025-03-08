@@ -33,6 +33,7 @@ dev = [
   "ipywidgets (>=8.1.5)",
   "lightgbm (>=4.3.0)",
   "mypy (>=1.15.0)",
+  "nbconvert (>=7.16.6)",
   "pdoc (>=15.0.1)",
   "poethepoet (>=0.33.0)",
   "pre-commit (>=4.1.0)",
