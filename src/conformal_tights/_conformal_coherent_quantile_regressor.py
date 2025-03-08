@@ -8,29 +8,12 @@ import pandas as pd
 from sklearn.base import BaseEstimator, MetaEstimatorMixin, RegressorMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
-from sklearn.utils.validation import (
-    check_array,
-    check_consistent_length,
-    check_is_fitted,
-    check_X_y,
-)
-
-# Try to import validate_data (available in sklearn >= 1.6)
-try:
-    # We don't directly use validate_data here, but we check if it's available
-    # to determine sklearn version
-    import importlib.util
-
-    _has_validate_data = (
-        importlib.util.find_spec("sklearn.utils.validation.validate_data") is not None
-    )
-    _SKLEARN_16_OR_HIGHER = _has_validate_data
-except ImportError:
-    _SKLEARN_16_OR_HIGHER = False
+from sklearn.utils.validation import check_consistent_length, check_is_fitted
 from xgboost import XGBRegressor
 
 from conformal_tights._coherent_linear_quantile_regressor import CoherentLinearQuantileRegressor
 from conformal_tights._typing import FloatMatrix, FloatVector
+from conformal_tights._validate_data import validate_data
 
 F = TypeVar("F", np.float32, np.float64)
 
@@ -107,13 +90,8 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         sample_weight: "FloatVector[F] | pd.Series | None" = None,
     ) -> "ConformalCoherentQuantileRegressor":
         """Fit this predictor."""
-        # Validate input with backward compatibility for sklearn < 1.6
-        if _SKLEARN_16_OR_HIGHER:
-            # For sklearn >= 1.6
-            check_X_y(X, y, ensure_all_finite=False, ensure_min_samples=3, y_numeric=True)
-        else:
-            # For sklearn < 1.6
-            check_X_y(X, y, force_all_finite=False, ensure_min_samples=3, y_numeric=True)
+        # Validate input.
+        validate_data(self, X, y, ensure_all_finite=False, ensure_min_samples=3, y_numeric=True)
         # Learn dimensionality and dtypes.
         if not hasattr(X, "dtypes"):
             X = np.asarray(X)
@@ -385,13 +363,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         """Predict on a given dataset."""
         assert coverage is None or quantiles is None
         check_is_fitted(self)
-        # Validate input with backward compatibility for sklearn < 1.6
-        if _SKLEARN_16_OR_HIGHER:
-            # For sklearn >= 1.6
-            check_array(X, ensure_all_finite=False)
-        else:
-            # For sklearn < 1.6
-            check_array(X, force_all_finite=False)
+        validate_data(self, X, reset=False, ensure_all_finite=False)
         if coverage is not None:
             ŷ_interval = self.predict_interval(X, coverage=coverage)
             return ŷ_interval
@@ -411,6 +383,6 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         return {
             "allow_nan": True,
             "_xfail_checks": {
-                "check_sample_weights_invariance": "Conformal calibration not invariant to removing zero-weight examples"
+                "check_sample_weights_invariance": "Conformal calibration not invariant to removing zero-weight examples",
             },
         }
