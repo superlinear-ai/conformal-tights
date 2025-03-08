@@ -103,8 +103,9 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
         series: Sequence[TimeSeries],
         past_covariates: Sequence[TimeSeries],
         future_covariates: Sequence[TimeSeries],
+        max_samples_per_ts: int,
         **kwargs: Any,
-    ) -> tuple[pd.DataFrame, FloatVector[F]]:
+    ) -> tuple[pd.DataFrame, FloatVector[F]] | tuple[pd.DataFrame, FloatVector[F], FloatVector[F]]:
         """Override training data to add support for categorical covariates."""
         # Validate categoricals with RegressionModelWithCategoricalCovariates. We cannot inherit
         # from RegressionModelWithCategoricalCovariates because it was developed with LightGBM in
@@ -123,8 +124,8 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
             future_covariates,
         )
         # Create lagged training data.
-        training_samples, training_labels = super()._create_lagged_data(
-            series, past_covariates, future_covariates, **kwargs
+        training_samples, *training_labels_and_sample_weights = super()._create_lagged_data(
+            series, past_covariates, future_covariates, max_samples_per_ts, **kwargs
         )
         # Convert categorical columns to pd.Categorical so that the wrapped regressor can handle
         # them appropriately.
@@ -137,7 +138,7 @@ class DartsForecaster(_LikelihoodMixin, RegressionModel):
             training_samples_df[cols[cat_col_index]] = cat_col
         # Store the (modified) model for filling the model container in _predict_and_sample.
         self.central_model_ = self.model
-        return training_samples_df, training_labels
+        return training_samples_df, *training_labels_and_sample_weights
 
     def _predict_and_sample(
         self,
