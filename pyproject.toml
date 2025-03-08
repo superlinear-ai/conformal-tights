@@ -1,54 +1,54 @@
-[build-system]  # https://python-poetry.org/docs/pyproject/#poetry-and-pep-517
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry]  # https://python-poetry.org/docs/pyproject/
+[project]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/
 name = "conformal-tights"
 version = "0.4.0"
 description = "A Python package that adds conformal prediction of coherent quantiles and intervals to any scikit-learn regressor or Darts forecaster."
-authors = ["Laurent Sorber <laurent@superlinear.ai>"]
 readme = "README.md"
-repository = "https://github.com/superlinear-ai/conformal-tights"
+authors = [
+  { name = "Laurent Sorber", email = "laurent@superlinear.eu" },
+]
+requires-python = ">=3.10,<4.0"
+dependencies = [
+  "numpy (>=1.26.0)",
+  "pandas (>=2.1.1)",
+  "scikit-learn (>=1.3.1)",
+  "scipy (>=1.11.2,<1.15.0)",
+  "u8darts (>=0.28.0)",
+  "xgboost (>=2.1.0)",
+]
+
+[project.urls]  # https://packaging.python.org/en/latest/specifications/well-known-project-urls/#well-known-labels
+homepage = "https://github.com/superlinear-ai/conformal-tights"
+source = "https://github.com/superlinear-ai/conformal-tights"
+changelog = "https://github.com/superlinear-ai/conformal-tights/blob/main/CHANGELOG.md"
+releasenotes = "https://github.com/superlinear-ai/conformal-tights/releases"
+documentation = "https://github.com/superlinear-ai/conformal-tights"
+issues = "https://github.com/superlinear-ai/conformal-tights/issues"
+
+[dependency-groups]  # https://docs.astral.sh/uv/concepts/projects/dependencies/#development-dependencies
+dev = [
+  "commitizen (>=4.4.1)",
+  "coverage[toml] (>=7.6.12)",
+  "ipykernel (>=6.29.5)",
+  "ipython (>=8.18.0)",
+  "ipywidgets (>=8.1.5)",
+  "lightgbm (>=4.3.0)",
+  "mypy (>=1.15.0)",
+  "nbconvert (>=7.16.6)",
+  "pdoc (>=15.0.1)",
+  "poethepoet (>=0.33.0)",
+  "pre-commit (>=4.1.0)",
+  "pytest (>=8.3.5)",
+  "pytest-mock (>=3.14.0)",
+  "pytest-xdist (>=3.6.1)",
+  "ruff (>=0.9.10)",
+  "typeguard (>=4.4.2)",
+]
 
 [tool.commitizen]  # https://commitizen-tools.github.io/commitizen/config/
-bump_message = "bump(release): v$current_version → v$new_version"
+bump_message = "bump: v$current_version → v$new_version"
 tag_format = "v$version"
 update_changelog_on_bump = true
-version_provider = "poetry"
-
-[tool.poetry.dependencies]  # https://python-poetry.org/docs/dependency-specification/
-python = ">=3.10,<4.0"
-numpy = ">=1.22.0"
-pandas = ">=1.0.5"
-scikit-learn = ">=1.0.0"
-scipy = ">=1.5.0"
-u8darts = ">=0.25.0"
-xgboost = ">=2.0.0"
-
-[tool.poetry.group.test.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
-commitizen = ">=3.21.3"
-coverage = { extras = ["toml"], version = ">=7.4.4" }
-lightgbm = ">=4.3.0"
-mypy = ">=1.9.0"
-poethepoet = ">=0.25.0"
-pre-commit = ">=3.7.0"
-pytest = ">=8.1.1"
-pytest-mock = ">=3.14.0"
-pytest-xdist = ">=3.5.0"
-ruff = ">=0.5.7"
-safety = ">=3.1.0"
-shellcheck-py = ">=0.10.0.1"
-typeguard = ">=4.2.1"
-
-[tool.poetry.group.dev.dependencies]  # https://python-poetry.org/docs/master/managing-dependencies/
-cruft = ">=2.15.0"
-ipykernel = ">=6.29.4"
-ipython = ">=8.18.0"
-ipywidgets = ">=8.1.2"
-matplotlib = ">=3.8.3"
-nbconvert = ">=7.16.3"
-pdoc = ">=14.4.0"
-tabulate = ">=0.9.0"
+version_provider = "uv"
 
 [tool.coverage.report]  # https://coverage.readthedocs.io/en/latest/config.html#report
 fail_under = 50
@@ -83,11 +83,14 @@ filterwarnings = ["error", "ignore::DeprecationWarning", "ignore::sklearn.except
 testpaths = ["src", "tests"]
 xfail_strict = true
 
-[tool.ruff]  # https://github.com/charliermarsh/ruff
+[tool.ruff]  # https://docs.astral.sh/ruff/settings/
 fix = true
 line-length = 100
 src = ["src", "tests"]
 target-version = "py310"
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.lint]
 select = ["A", "ASYNC", "B", "BLE", "C4", "C90", "D", "DTZ", "E", "EM", "ERA", "F", "FBT", "FLY", "FURB", "G", "I", "ICN", "INP", "INT", "ISC", "LOG", "N", "NPY", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TCH", "TID", "TRY", "UP", "W", "YTT"]
@@ -103,7 +106,13 @@ max-doc-length = 100
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.poe.tasks]  # https://github.com/nat-n/poethepoet
+[tool.uv]  # https://docs.astral.sh/uv/reference/settings/
+package = true
+
+[tool.poe.executor]  # https://github.com/nat-n/poethepoet
+type = "simple"
+
+[tool.poe.tasks]
 
   [tool.poe.tasks.readme]
   help = "Generate this package's README"
@@ -139,16 +148,11 @@ convention = "numpy"
 
   [tool.poe.tasks.lint]
   help = "Lint this package"
-
-    [[tool.poe.tasks.lint.sequence]]
     cmd = """
       pre-commit run
         --all-files
         --color always
       """
-
-    [[tool.poe.tasks.lint.sequence]]
-    shell = "safety check --continue-on-error --full-report"
 
   [tool.poe.tasks.test]
   help = "Test this package"

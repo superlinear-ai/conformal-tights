@@ -8,16 +8,17 @@ import pandas as pd
 from sklearn.base import BaseEstimator, MetaEstimatorMixin, RegressorMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
-from sklearn.utils.validation import (
-    check_array,
-    check_consistent_length,
-    check_is_fitted,
-    check_X_y,
-)
+from sklearn.utils.validation import check_consistent_length, check_is_fitted
 from xgboost import XGBRegressor
+
+try:
+    from sklearn.utils import Tags
+except ImportError:
+    Tags = Any
 
 from conformal_tights._coherent_linear_quantile_regressor import CoherentLinearQuantileRegressor
 from conformal_tights._typing import FloatMatrix, FloatVector
+from conformal_tights._validate_data import validate_data
 
 F = TypeVar("F", np.float32, np.float64)
 
@@ -95,7 +96,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
     ) -> "ConformalCoherentQuantileRegressor":
         """Fit this predictor."""
         # Validate input.
-        check_X_y(X, y, force_all_finite=False, ensure_min_samples=3, y_numeric=True)
+        validate_data(self, X, y, ensure_all_finite=False, ensure_min_samples=3, y_numeric=True)
         # Learn dimensionality and dtypes.
         if not hasattr(X, "dtypes"):
             X = np.asarray(X)
@@ -133,7 +134,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             random_state=self.random_state,
         )
         self.sample_weight_calib_l1_, self.sample_weight_calib_l2_ = (
-            sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type]
+            sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type,var-annotated]
         )
         # Fit the wrapped estimator for point prediction.
         try:
@@ -367,7 +368,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         """Predict on a given dataset."""
         assert coverage is None or quantiles is None
         check_is_fitted(self)
-        check_array(X, force_all_finite=False)
+        validate_data(self, X, reset=False, ensure_all_finite=False)
         if coverage is not None:
             ŷ_interval = self.predict_interval(X, coverage=coverage)
             return ŷ_interval
@@ -382,11 +383,18 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             return ŷ_series
         return ŷ
 
+    def __sklearn_tags__(self) -> Tags:
+        """Return this estimator's tags."""
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        tags.input_tags.categorical = True
+        return tags
+
     def _more_tags(self) -> dict[str, Any]:
         """Return more tags for the estimator."""
         return {
             "allow_nan": True,
             "_xfail_checks": {
-                "check_sample_weights_invariance": "Conformal calibration not invariant to removing zero-weight examples"
+                "check_sample_weights_invariance": "Conformal calibration not invariant to removing zero-weight examples",
             },
         }

@@ -1,0 +1,13 @@
+_commit: v1.3.3
+_src_path: gh:superlinear-ai/substrate
+author_email: laurent@superlinear.eu
+author_name: Laurent Sorber
+project_description: A Python package that adds conformal prediction of coherent quantiles
+    and intervals to any scikit-learn regressor or Darts forecaster.
+project_name: Conformal Tights
+project_type: package
+project_url: https://github.com/superlinear-ai/conformal-tights
+python_version: '3.10'
+typing: strict
+with_conventional_commits: true
+with_typer_cli: false
