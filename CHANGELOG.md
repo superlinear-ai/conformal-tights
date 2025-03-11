@@ -1,3 +1,10 @@
+## v0.4.1 (2025-03-11)
+
+### Fix
+
+- add support for SciPy v1.15 (#39)
+- upgrade scaffolding and support sklearn v1.6 (#34)
+
 ## v0.4.0 (2024-06-11)
 
 ### Feat
