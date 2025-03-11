@@ -2,20 +2,22 @@
 
 # 👖 Conformal Tights
 
-Conformal Tights is a Python package that exports:
+Conformal Tights is a Python package for Coherent Conformal Prediction<sup>✦</sup> that exports:
 
-- a [scikit-learn](https://github.com/scikit-learn/scikit-learn) [meta-estimator](https://scikit-learn.org/stable/glossary.html#term-meta-estimator) that adds [conformal prediction](https://en.wikipedia.org/wiki/Conformal_prediction) of coherent [quantiles](https://en.wikipedia.org/wiki/Quantile) and [intervals](https://en.wikipedia.org/wiki/Prediction_interval) to any [scikit-learn regressor](https://scikit-learn.org/stable/glossary.html#term-regressor)
-- a [Darts](https://github.com/unit8co/darts) [forecaster](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.regression_model.html) that adds conformally calibrated [probabilistic time series forecasting](https://unit8co.github.io/darts/userguide/forecasting_overview.html#probabilistic-forecasts) to any scikit-learn regressor
+1. 🍬 a scikit-learn [meta-estimator](https://scikit-learn.org/stable/glossary.html#term-meta-estimator) that adds coherent [conformal](https://en.wikipedia.org/wiki/Conformal_prediction) prediction of [quantiles](https://en.wikipedia.org/wiki/Quantile) and [intervals](https://en.wikipedia.org/wiki/Prediction_interval) to any [scikit-learn regressor](https://scikit-learn.org/stable/glossary.html#term-regressor)
+2. 🔮 a Darts [forecaster](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.regression_model.html) that adds coherent conformal [probabilistic time series forecasting](https://unit8co.github.io/darts/userguide/forecasting_overview.html#probabilistic-forecasts) to any scikit-learn regressor
 
 ## Features
 
-1. 🍬 *Sklearn meta-estimator*: add conformal prediction of quantiles and intervals to any scikit-learn regressor
-2. 🔮 *Darts forecaster:* add conformally calibrated probabilistic forecasting to any scikit-learn regressor
-3. 🌡️ *Conformally calibrated:* accurate quantiles, and intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability)
-4. 🚦 *Coherent quantiles:* quantiles increase monotonically instead of [crossing](https://github.com/dmlc/xgboost/issues/9848) [each other](https://github.com/microsoft/LightGBM/issues/3447)
-5. 👖 *Tight quantiles:* selects the lowest [dispersion](https://en.wikipedia.org/wiki/Statistical_dispersion) that provides the desired coverage
-6. 🎁 *Data efficient:* requires only a small number of calibration examples to fit
-7. 🐼 *Pandas support:* optionally predict on DataFrames and receive DataFrame output
+> [!TIP]
+> <sup>✦</sup>Coherent Conformal Prediction (CCP): what makes Conformal Tights unique is that it produces so-called _coherent_ conformally calibrated quantile predictions. Without coherence, a model's predicted quantiles may cross each other in practice. For instance, the 25th percentile prediction may be higher than the 75th percentile prediction. With coherence, the predicted quantiles increase monotonically as you would expect.
+
+1. 🚦 **Coherent:** quantiles increase monotonically instead of [crossing](https://github.com/dmlc/xgboost/issues/9848) [each other](https://github.com/microsoft/LightGBM/issues/3447)
+2. 🌡️ **Conformal:** prediction intervals with reliable [coverage](https://en.wikipedia.org/wiki/Coverage_probability) and accurate quantile predictions
+3. 🪜 **Dynamic:** two-level conformal calibration of both absolute and relative residuals
+4. 👖 **Tight:** selects the lowest [dispersion](https://en.wikipedia.org/wiki/Statistical_dispersion) that provides the desired coverage
+5. 🎁 **Data efficient:** requires only a small number of calibration examples to fit
+6. 🐼 **Pandas support:** optionally predict on DataFrames and receive DataFrame output
 
 ## Using
 
