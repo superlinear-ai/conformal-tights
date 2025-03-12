@@ -3,8 +3,6 @@ services:
   devcontainer:
     build:
       target: dev
-    environment:
-      - UV_PUBLISH_TOKEN
     volumes:
       - ..:/workspaces
       - command-history-volume:/home/user/.history/
