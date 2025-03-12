@@ -1,7 +1,7 @@
 [project]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/
 name = "conformal-tights"
 version = "0.4.1"
-description = "A Python package that adds conformal prediction of coherent quantiles and intervals to any scikit-learn regressor or Darts forecaster."
+description = "A Python package for Coherent Conformal Prediction."
 readme = "README.md"
 authors = [
   { name = "Laurent Sorber", email = "laurent@superlinear.eu" },
