@@ -1,3 +1,7 @@
+[build-system]  # https://docs.astral.sh/uv/concepts/projects/config/#build-systems
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
 [project]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/
 name = "conformal-tights"
 version = "0.4.1"
@@ -105,9 +109,6 @@ max-doc-length = 100
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.uv]  # https://docs.astral.sh/uv/reference/settings/
-package = true
 
 [tool.poe.executor]  # https://github.com/nat-n/poethepoet
 type = "simple"
