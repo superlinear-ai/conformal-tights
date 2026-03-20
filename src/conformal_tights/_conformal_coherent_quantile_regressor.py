@@ -14,6 +14,7 @@ from xgboost import XGBRegressor
 
 from conformal_tights._coherent_linear_quantile_regressor import CoherentLinearQuantileRegressor
 from conformal_tights._typing import FloatMatrix, FloatVector
+from conformal_tights._xgboost_weighted_quantile import _weighted_quantile
 
 F = TypeVar("F", np.float32, np.float64)
 
@@ -152,9 +153,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         # Fit a base estimator on the training data (which is a subset of all available data). This
         # estimator's predictions will be used as the center of the conformally calibrated quantiles
         # and intervals.
-        self.base_estimator_ = (
-            clone(self.estimator) if self.nonconformity_estimator != "auto" else XGBRegressor()
-        )
+        self.base_estimator_ = clone(self.estimator) if self.estimator != "auto" else XGBRegressor()
         if isinstance(self.base_estimator_, XGBRegressor):
             self.base_estimator_.set_params(
                 objective="reg:absoluteerror",
@@ -178,6 +177,16 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             self.nonconformity_estimator_.set_params(
                 objective="reg:quantileerror",
                 quantile_alpha=self.nonconformity_quantiles_,
+                # Match XGBoost < 3.1's scalar intercept for multi-quantile objectives.
+                # Newer XGBoost versions use a per-quantile intercept here, which increases the
+                # risk that the downstream conformal quantiles are no longer coherent.
+                base_score=np.mean(
+                    _weighted_quantile(
+                        y_train,
+                        self.nonconformity_quantiles_,
+                        sample_weight=sample_weight_train,
+                    )
+                ),
                 enable_categorical=True,
                 random_state=self.random_state,
             )
