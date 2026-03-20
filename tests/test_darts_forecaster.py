@@ -1,6 +1,7 @@
 """Test the Darts Forecaster."""
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from darts import TimeSeries
 from darts.utils.model_selection import train_test_split
@@ -58,7 +59,7 @@ def test_darts_forecaster_reuses_quantile_predictions() -> None:
     model = ConformalCoherentQuantileRegressor()
     calls = 0
 
-    def predict_quantiles(x: pd.DataFrame, quantiles: list[float]) -> np.ndarray:
+    def predict_quantiles(x: pd.DataFrame, quantiles: list[float]) -> npt.NDArray[np.float64]:
         nonlocal calls
         calls += 1
         np.testing.assert_array_equal(quantiles, [0.1, 0.5, 0.9], strict=True)
