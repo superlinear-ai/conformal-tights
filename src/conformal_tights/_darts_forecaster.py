@@ -1,22 +1,28 @@
 """Darts Forecaster."""
 
+import logging
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from darts.models.forecasting.sklearn_model import (
+
+# Silence optional Darts import warnings for torch-only and statsforecast models.
+logging.getLogger("darts.models").setLevel(logging.ERROR)
+logging.getLogger("darts.utils.likelihood_models").setLevel(logging.ERROR)
+
+from darts.models.forecasting.sklearn_model import (  # noqa: E402
     FUTURE_LAGS_TYPE,
     LAGS_TYPE,
     SKLearnModelWithCategoricalFeatures,
 )
-from darts.utils.likelihood_models.sklearn import QuantileRegression
+from darts.utils.likelihood_models.sklearn import QuantileRegression  # noqa: E402
 
-from conformal_tights._conformal_coherent_quantile_regressor import (
+from conformal_tights._conformal_coherent_quantile_regressor import (  # noqa: E402
     ConformalCoherentQuantileRegressor,
 )
-from conformal_tights._typing import FloatMatrix, FloatTensor
+from conformal_tights._typing import FloatMatrix, FloatTensor  # noqa: E402
 
 F = TypeVar("F", np.float32, np.float64)
 
