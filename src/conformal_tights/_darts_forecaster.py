@@ -146,8 +146,8 @@ class DartsForecaster(SKLearnModelWithCategoricalFeatures):
         # Instead of choosing the quantiles at initialisation time, allow users to set the quantiles
         # of DartsForecaster.predict at prediction time.
         if not np.array_equal(np.asarray(getattr(self, "quantiles", None)), np.asarray(quantiles)):
-            quantiles_array = np.atleast_1d(np.asarray(quantiles, dtype=np.float64))
-            self.quantiles = sorted(float(quantile) for quantile in quantiles_array.tolist())
+            quantiles_array = np.ravel(np.asarray(quantiles, dtype=np.float64))
+            self.quantiles = sorted(float(quantile) for quantile in quantiles_array)
             self._median_idx = self.quantiles.index(0.5)
             self._likelihood = QuantileRegression(n_outputs=self.pred_dim, quantiles=self.quantiles)
             self._model_container = _DartsAdapter.model_container(self.model, self.quantiles)
