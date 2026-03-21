@@ -1,3 +1,9 @@
+## v0.5.0 (2026-03-21)
+
+### Feat
+
+- improve forecasting speed and compatibility with darts >=0.39 (#50)
+
 ## v0.4.1 (2025-03-11)
 
 ### Fix
