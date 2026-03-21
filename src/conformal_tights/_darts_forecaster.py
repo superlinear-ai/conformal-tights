@@ -77,7 +77,7 @@ class DartsForecaster(SKLearnModelWithCategoricalFeatures):
         categorical_past_covariates: str | list[str] | None = None,
         categorical_future_covariates: str | list[str] | None = None,
         categorical_static_covariates: str | list[str] | None = None,
-        random_state: int | None = None,
+        random_state: int | None = 42,
     ) -> None:
         """Initialize a Darts Conformal Coherent Quantile Regressor."""
         # Initialise darts.models.SKLearnModelWithCategoricalFeatures.
