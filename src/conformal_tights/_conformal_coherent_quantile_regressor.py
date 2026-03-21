@@ -1,6 +1,5 @@
 """Conformal Coherent Quantile Regressor meta-estimator."""
 
-import warnings
 from typing import Any, Literal, TypeVar, overload
 
 import numpy as np
@@ -137,12 +136,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         )
         # Fit the wrapped estimator for point prediction.
         try:
-            with warnings.catch_warnings():
-                # Suppress FutureWarnings from estimators that still rely on _get_tags/_more_tags.
-                warnings.filterwarnings(
-                    "ignore", message=r".*_get_tags.*_more_tags.*", category=FutureWarning
-                )
-                check_is_fitted(self.estimator)
+            check_is_fitted(self.estimator)
         except (NotFittedError, TypeError):
             # Fit the given estimator on all available data.
             self.estimator_ = (
