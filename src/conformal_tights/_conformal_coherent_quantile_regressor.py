@@ -8,17 +8,13 @@ import pandas as pd
 from sklearn.base import BaseEstimator, MetaEstimatorMixin, RegressorMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
-from sklearn.utils.validation import check_consistent_length, check_is_fitted
+from sklearn.utils import Tags
+from sklearn.utils.validation import check_consistent_length, check_is_fitted, validate_data
 from xgboost import XGBRegressor
-
-try:
-    from sklearn.utils import Tags
-except ImportError:
-    Tags = Any
 
 from conformal_tights._coherent_linear_quantile_regressor import CoherentLinearQuantileRegressor
 from conformal_tights._typing import FloatMatrix, FloatVector
-from conformal_tights._validate_data import validate_data
+from conformal_tights._xgboost_weighted_quantile import _weighted_quantile
 
 F = TypeVar("F", np.float32, np.float64)
 
@@ -133,8 +129,10 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             else 1,
             random_state=self.random_state,
         )
+        self.sample_weight_calib_l1_: FloatVector[F] | None
+        self.sample_weight_calib_l2_: FloatVector[F] | None
         self.sample_weight_calib_l1_, self.sample_weight_calib_l2_ = (
-            sample_weights_calib[:2] if sample_weight is not None else (None, None)  # type: ignore[has-type,var-annotated]
+            sample_weights_calib[:2] if sample_weight is not None else (None, None)
         )
         # Fit the wrapped estimator for point prediction.
         try:
@@ -155,9 +153,7 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
         # Fit a base estimator on the training data (which is a subset of all available data). This
         # estimator's predictions will be used as the center of the conformally calibrated quantiles
         # and intervals.
-        self.base_estimator_ = (
-            clone(self.estimator) if self.nonconformity_estimator != "auto" else XGBRegressor()
-        )
+        self.base_estimator_ = clone(self.estimator) if self.estimator != "auto" else XGBRegressor()
         if isinstance(self.base_estimator_, XGBRegressor):
             self.base_estimator_.set_params(
                 objective="reg:absoluteerror",
@@ -181,6 +177,16 @@ class ConformalCoherentQuantileRegressor(MetaEstimatorMixin, RegressorMixin, Bas
             self.nonconformity_estimator_.set_params(
                 objective="reg:quantileerror",
                 quantile_alpha=self.nonconformity_quantiles_,
+                # Match XGBoost < 3.1's scalar intercept for multi-quantile objectives.
+                # Newer XGBoost versions use a per-quantile intercept here, which increases the
+                # risk that the downstream conformal quantiles are no longer coherent.
+                base_score=np.mean(
+                    _weighted_quantile(
+                        y_train,
+                        self.nonconformity_quantiles_,
+                        sample_weight=sample_weight_train,
+                    )
+                ),
                 enable_categorical=True,
                 random_state=self.random_state,
             )

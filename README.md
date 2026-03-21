@@ -5,7 +5,7 @@
 Conformal Tights is a Python package for Coherent Conformal Prediction<sup>✦</sup> that exports:
 
 1. 🍬 a scikit-learn [meta-estimator](https://scikit-learn.org/stable/glossary.html#term-meta-estimator) that adds coherent [conformal](https://en.wikipedia.org/wiki/Conformal_prediction) prediction of [quantiles](https://en.wikipedia.org/wiki/Quantile) and [intervals](https://en.wikipedia.org/wiki/Prediction_interval) to any [scikit-learn regressor](https://scikit-learn.org/stable/glossary.html#term-regressor)
-2. 🔮 a Darts [forecaster](https://unit8co.github.io/darts/generated_api/darts.models.forecasting.regression_model.html) that adds coherent conformal [probabilistic time series forecasting](https://unit8co.github.io/darts/userguide/forecasting_overview.html#probabilistic-forecasts) to any scikit-learn regressor
+2. 🔮 a Darts forecaster that adds coherent conformal [probabilistic time series forecasting](https://unit8co.github.io/darts/userguide/forecasting_overview.html#probabilistic-forecasts) to any scikit-learn regressor
 
 ## Features
 
@@ -66,15 +66,15 @@ When the input data is a pandas DataFrame, the output is also a pandas DataFrame
 
 |   house_id |    0.025 |     0.05 |      0.1 |      0.5 |      0.9 |     0.95 |    0.975 |
 |-----------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|
-|       1357 | 114743.7 | 120917.9 | 131752.6 | 156708.2 | 175907.8 | 187996.1 | 205443.4 |
-|       2367 |  67382.7 |  80191.7 |  86871.8 | 105807.1 | 118465.3 | 127581.2 | 142419.1 |
-|       2822 | 119068.0 | 131864.8 | 138541.6 | 159447.7 | 179227.2 | 197337.0 | 214134.1 |
-|       2126 |  93885.8 | 100040.7 | 111345.5 | 134292.7 | 150557.1 | 164595.8 | 182524.1 |
-|       1544 |  68959.8 |  81648.8 |  88364.1 | 108298.3 | 122329.6 | 132421.1 | 147225.6 |
+|       1357 | 114720.3 | 120910.8 | 131770.3 | 156708.2 | 175907.8 | 187996.1 | 205443.4 |
+|       2367 |  67382.7 |  80191.7 |  86871.8 | 105807.1 | 118470.3 | 127582.6 | 142321.1 |
+|       2822 | 119068.0 | 131864.8 | 138541.6 | 159447.7 | 179178.5 | 197245.5 | 214206.2 |
+|       2126 |  93860.7 | 100048.8 | 111389.7 | 134292.7 | 150557.1 | 164595.8 | 182524.1 |
+|       1544 |  68959.8 |  81648.8 |  88364.1 | 108298.3 | 122315.3 | 132425.1 | 147109.3 |
 
 Let's visualize the predicted quantiles on the test set:
 
-<img src="https://github.com/superlinear-ai/conformal-tights/assets/4543654/2726d108-ee84-47d0-83d9-7e911b123f0c">
+<img src="https://github.com/user-attachments/assets/aa957770-ad8c-4c50-beab-d6708453e6d8" />
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>
@@ -207,27 +207,27 @@ forecaster = DartsForecaster(
 # Fit the forecaster
 forecaster.fit(y_train, future_covariates=X_train)
 
-# Make a probabilistic forecast 5 days into the future by predicting a set of conformally calibrated
-# quantiles at each time step and drawing 500 samples from them
+# Make a probabilistic forecast 5 days into the future by generating 500 forecast paths, where each
+# step is sampled from the point-in-time quantiles predicted by the conformal model
 quantiles = (0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.975)
 forecast = forecaster.predict(
     n=5 * 24, future_covariates=X_test, num_samples=500, quantiles=quantiles
 )
 ```
 
-Printing the head of the forecast quantiles time series `forecast.quantiles_df(quantiles=quantiles)` yields:
+Printing the head of the forecast quantiles time series `forecast.quantile(quantiles).to_dataframe()` yields:
 
-| Timestamp      |   Value_NE5_0.025 |   Value_NE5_0.05 |   Value_NE5_0.1 |   Value_NE5_0.25 |   Value_NE5_0.5 |   Value_NE5_0.75 |   Value_NE5_0.9 |   Value_NE5_0.95 |   Value_NE5_0.975 |
-|:---------------|------------------:|-----------------:|----------------:|-----------------:|----------------:|-----------------:|----------------:|-----------------:|------------------:|
-| 2022‑06‑01 01h |           19165.2 |          19268.3 |         19435.7 |          19663.0 |         19861.7 |          20062.2 |         20237.9 |          20337.7 |           20453.2 |
-| 2022‑06‑01 02h |           19004.0 |          19099.0 |         19226.3 |          19453.7 |         19710.7 |          19966.1 |         20170.1 |          20272.8 |           20366.9 |
-| 2022‑06‑01 03h |           19372.6 |          19493.0 |         19679.4 |          20027.6 |         20324.6 |          20546.3 |         20773.2 |          20910.3 |           21014.1 |
-| 2022‑06‑01 04h |           21936.2 |          22105.6 |         22436.0 |          22917.5 |         23308.6 |          23604.8 |         23871.0 |          24121.7 |           24351.5 |
-| 2022‑06‑01 05h |           25040.5 |          25330.5 |         25531.1 |          25910.4 |         26439.4 |          26903.2 |         27287.4 |          27493.9 |           27633.9 |
+| Timestamp      |   Value_NE5_q0.025 |   Value_NE5_q0.050 |   Value_NE5_q0.100 |   Value_NE5_q0.250 |   Value_NE5_q0.500 |   Value_NE5_q0.750 |   Value_NE5_q0.900 |   Value_NE5_q0.950 |   Value_NE5_q0.975 |
+|:---------------|-------------------:|-------------------:|-------------------:|-------------------:|-------------------:|-------------------:|-------------------:|-------------------:|-------------------:|
+| 2022‑06‑01 01h |            19274.5 |            19394.9 |            19516.3 |            19756.8 |            19983.2 |            20185.9 |            20392.7 |            20497.1 |            20591.7 |
+| 2022‑06‑01 02h |            19147.0 |            19252.3 |            19396.7 |            19624.3 |            19895.0 |            20130.5 |            20334.6 |            20445.2 |            20582.1 |
+| 2022‑06‑01 03h |            19332.1 |            19448.3 |            19632.1 |            19931.0 |            20231.7 |            20486.7 |            20689.0 |            20876.7 |            20999.2 |
+| 2022‑06‑01 04h |            21649.3 |            21827.0 |            22195.7 |            22619.9 |            23158.6 |            23470.7 |            23802.8 |            24026.9 |            24246.9 |
+| 2022‑06‑01 05h |            24669.7 |            25045.8 |            25279.7 |            25624.5 |            26153.4 |            26797.1 |            27147.0 |            27318.5 |            27487.5 |
 
 Let's visualize the forecast and its prediction interval on the test set:
 
-<img src="https://github.com/superlinear-ai/conformal-tights/assets/4543654/8c3c256f-0732-49c7-94f2-e42213e85e4b">
+<img src="https://github.com/user-attachments/assets/9bb1ec11-e974-4597-9315-bc0fb4c598da" />
 
 <details>
 <summary>Expand to see the code that generated the graph above</summary>

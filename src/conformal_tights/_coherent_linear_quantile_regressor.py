@@ -8,10 +8,9 @@ from scipy import sparse
 from scipy.optimize import linprog
 from scipy.sparse import csr_matrix
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.utils.validation import check_consistent_length, check_is_fitted
+from sklearn.utils.validation import check_consistent_length, check_is_fitted, validate_data
 
 from conformal_tights._typing import FloatMatrix, FloatVector
-from conformal_tights._validate_data import validate_data
 
 F = TypeVar("F", np.float32, np.float64)
 
