@@ -12,11 +12,11 @@ authors = [
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
+  "darts (>=0.39.0)",
   "numpy (>=1.26.0)",
   "pandas (>=2.1.1)",
   "scikit-learn (>=1.6.0)",
   "scipy (>=1.11.2,!=1.15.0.*,!=1.15.1,!=1.15.2)",  # Exclude certain versions because of https://github.com/scipy/scipy/issues/22655.
-  "u8darts (>=0.39.0)",
   "xgboost (>=2.1.4)",  # First version of XGBoost that is compatible with scikit-learn 1.6.0.
 ]
 
