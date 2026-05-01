@@ -1,5 +1,5 @@
 [build-system]  # https://docs.astral.sh/uv/concepts/projects/config/#build-systems
-requires = ["hatchling>=1.27.0"]
+requires = ["hatchling>=1.29.0"]
 build-backend = "hatchling.build"
 
 [project]  # https://packaging.python.org/en/latest/specifications/pyproject-toml/
@@ -30,23 +30,23 @@ issues = "https://github.com/superlinear-ai/conformal-tights/issues"
 
 [dependency-groups]  # https://docs.astral.sh/uv/concepts/projects/dependencies/#development-dependencies
 dev = [
-  "commitizen (>=4.4.1)",
-  "coverage[toml] (>=7.6.12)",
-  "ipykernel (>=6.29.5)",
-  "ipython (>=8.18.0)",
-  "ipywidgets (>=8.1.5)",
+  "commitizen (>=4.13.10)",
+  "coverage[toml] (>=7.13.5)",
+  "ipykernel (>=7.2.0)",
+  "ipython (>=8.39.0)",
+  "ipywidgets (>=8.1.8)",
   "lightgbm (>=4.6.0)",
-  "mypy (>=1.19.1)",
-  "nbconvert (>=7.16.6)",
+  "mypy (>=1.20.2)",
+  "nbconvert (>=7.17.1)",
   "pandas[output-formatting] (>=2.1.1)",
-  "pdoc (>=15.0.1)",
-  "poethepoet (>=0.33.0)",
-  "pre-commit (>=4.1.0)",
-  "pytest (>=8.3.5)",
-  "pytest-mock (>=3.14.0)",
-  "pytest-xdist (>=3.6.1)",
-  "ruff (>=0.15.6)",
-  "typeguard (>=4.4.2)",
+  "pdoc (>=16.0.0)",
+  "poethepoet (>=0.45.0)",
+  "pre-commit (>=4.6.0)",
+  "pytest (>=9.0.3)",
+  "pytest-mock (>=3.15.1)",
+  "pytest-xdist (>=3.8.0)",
+  "ruff (>=0.15.12)",
+  "typeguard (>=4.5.1)",
 ]
 
 [tool.commitizen]  # https://commitizen-tools.github.io/commitizen/config/
